@@ -59,7 +59,7 @@ void Game::handleInput() {
 
 
 /*
-  factory method to automatically create Instances of the right childClass and add them to
+  factory method to automatically create instances of the correct child-class and add them to
   the base class array in the Game class via polymorphism
 */
 void Game::addEntity(Type _entityType, const std::string& _filePath, float _posX, float _posY) {

@@ -4,6 +4,7 @@
 
 #include "Player.h"
 #include "Game.h"
+#include <SFML/System/Vector2.hpp>
 
 Player::Player(const std::string &_textureFilePath, float _posX, float _posY):
 Entity(_textureFilePath, _posX, _posY),
@@ -28,10 +29,15 @@ void Player::move(float _rateX, float _rateY, unsigned _borderX, unsigned _borde
     float newPositionX = positionX + _rateX;
     float newPositionY = positionY + _rateY;
 
-    if ((0 <= newPositionX and newPositionX <= _borderX-90) and (0 <= newPositionY and newPositionY <= _borderY-90)) {
+    sf::Vector2f scale = getSprite().getScale();
+    //WORK IN PROGRESS
+    sf::Vector2u size = getTexture().getSize();
+    float offsetRight = size.x * scale.x;
+    float offsetBottom = size.y * scale.y;
+
+    if ((0 <= newPositionX and newPositionX <= _borderX-offsetRight) and (0 <= newPositionY and newPositionY <= _borderY-offsetBottom)) {
         getSprite().setPosition({newPositionX, newPositionY});
     }
-
 }
 
 

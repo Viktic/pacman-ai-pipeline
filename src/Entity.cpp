@@ -32,6 +32,10 @@ sf::Sprite& Entity::getSprite() {
     return m_sprite;
 }
 
+sf::Texture& Entity::getTexture() {
+    return m_texture;
+}
+
 
 size_t Entity::getEntityCount() {
     return m_entityCount;

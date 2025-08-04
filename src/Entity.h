@@ -15,6 +15,7 @@ public:
     virtual ~Entity();
 
     sf::Sprite& getSprite();
+    sf::Texture& getTexture();
     static size_t getEntityCount();
     virtual void move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) = 0;
 
