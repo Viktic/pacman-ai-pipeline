@@ -1,25 +1,25 @@
 //
-// Created by Viktor Brandmaier on 03.07.25.
+// Created by Viktor Brandmaier on 04.07.25.
 //
 
-// #pragma once
-#include <SFML/Graphics/Sprite.hpp>
-#include "SFML/Graphics/Texture.hpp"
+#pragma once
+#include "Entity.h"
+#include <string>
+#include <SFML/Window/Event.hpp>
 
+class Player: public Entity {
 
-class Player {
-public:
-    Player(const char* _filePath);
-    sf::Sprite& getSprite();
-    void move(float _rateX, float _rateY);
+    public:
 
-private:
-    sf::Texture m_texture;
-    sf::Sprite m_sprite;
-    int m_health;
-    float m_positionX;
-    float m_positionY;
+        void handleInput(unsigned _borderX, unsigned _borderY);
+        Player(const std::string& _textureFilePath, float _posX, float _posY);
+        int getHealth();
+        void setHealth(int _value);
+        void move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) override;
 
+    private:
+        int m_health;
+        float m_speed;
 };
 
 

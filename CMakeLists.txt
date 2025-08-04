@@ -13,7 +13,15 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 #change the add_executable list when other files are added
 add_executable(main src/main.cpp
+        src/Entity.cpp
+        src/Entity.h
         src/Player.cpp
-        src/Player.h)
+        src/Player.h
+        src/Enemy.cpp
+        src/Enemy.h
+        src/Game.cpp
+        src/Game.h
+        src/EntityType.h
+)
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)

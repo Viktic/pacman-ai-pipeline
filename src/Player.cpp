@@ -1,37 +1,54 @@
 //
-// Created by Viktor Brandmaier on 03.07.25.
+// Created by Viktor Brandmaier on 04.07.25.
 //
+
 #include "Player.h"
+#include "Game.h"
 
-#include <iostream>
-#include <SFML/Graphics/Sprite.hpp>
-#include "SFML/Graphics/Texture.hpp"
+Player::Player(const std::string &_textureFilePath, float _posX, float _posY):
+Entity(_textureFilePath, _posX, _posY),
+m_health(100),
+m_speed(3.0f){
 
-Player::Player(const char* _filePath):
-// in SMFL3 sprite needs to be initialized in the initializer list
-    m_texture(_filePath),
-    m_sprite(m_texture),
-    m_health(100),
-    m_positionX(0.0f),
-    m_positionY(0.0f) {
-
-    m_sprite.setScale({0.05f, 0.05f});
-    m_sprite.setPosition({m_positionX, m_positionY});
 }
 
-sf::Sprite& Player::getSprite() {
-    return m_sprite;
+
+void Player::setHealth(int _value) {
+    m_health = _value;
 }
 
-void Player::move(float _rateX,float _rateY) {
-    float positionX = m_sprite.getPosition().x;
-    float positionY = m_sprite.getPosition().y;
+int Player::getHealth() {
+    return m_health;
+}
+
+void Player::move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) {
+
+    float positionX = getSprite().getPosition().x;
+    float positionY = getSprite().getPosition().y;
     float newPositionX = positionX + _rateX;
     float newPositionY = positionY + _rateY;
 
-    m_sprite.setPosition({newPositionX, newPositionY});
+    if ((0 <= newPositionX and newPositionX <= _borderX-90) and (0 <= newPositionY and newPositionY <= _borderY-90)) {
+        getSprite().setPosition({newPositionX, newPositionY});
+    }
+
 }
 
 
+void Player::handleInput(unsigned _borderX, unsigned _borderY) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
+        move(0.0f, -m_speed, _borderX, _borderY);
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+        move(-m_speed, 0.0, _borderX, _borderY);
 
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+        move(0.0f, m_speed,_borderX, _borderY);
+
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        move(m_speed, 0.0f,_borderX, _borderY);
+    }
+}
 

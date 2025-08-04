@@ -1,44 +1,19 @@
 #include "Player.h"
+#include "Game.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 
 int main()
 {
-    //new window is declared and created
-    auto window = sf::RenderWindow(sf::VideoMode({1920u, 1080u}), "OOP-Game");
-    window.setFramerateLimit(144);
+    //Initialize Game Instance
+    Game* pGame = new Game(1600, 1000, "OOP-Game");
 
-    auto pHannes = new Player("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
-    sf::Sprite& pHannesPlayer = pHannes->getSprite();
-    //Game Loop
-    while (window.isOpen())
-    {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
-            pHannes->move(1.5f, 0.0f);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
-            pHannes->move(-1.5f, 0.0f);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
-            pHannes->move(0.0f, 1.5f);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
-            pHannes->move(0.0f, -1.5f);
-        }
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-            {
-                delete pHannes;
-                window.close();
-            }
-        }
-        //Render
-        window.clear();
+    pGame->addEntity(Type::Player, "/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", 0.0f,0.0f);
+    pGame->addEntity(Type::Enemy, "/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
 
-        //Draw the player Sprite
-        window.draw(pHannesPlayer);
+    pGame->run();
 
-        window.display();
-    }
+
+
+    return 0;
 }
