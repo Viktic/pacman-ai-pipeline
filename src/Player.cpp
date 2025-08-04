@@ -6,10 +6,10 @@
 #include "Game.h"
 #include <SFML/System/Vector2.hpp>
 
-Player::Player(const std::string &_textureFilePath, float _posX, float _posY):
-Entity(_textureFilePath, _posX, _posY),
+Player::Player(const std::string &_textureFilePath):
+Entity(_textureFilePath, {0,0}),
 m_health(100),
-m_speed(3.0f){
+m_speed(3.0f) {
 
 }
 
@@ -22,7 +22,7 @@ int Player::getHealth() {
     return m_health;
 }
 
-void Player::move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) {
+void Player::move(float _rateX, float _rateY, sf::Vector2u _windowSize) {
 
     float positionX = getSprite().getPosition().x;
     float positionY = getSprite().getPosition().y;
@@ -35,26 +35,26 @@ void Player::move(float _rateX, float _rateY, unsigned _borderX, unsigned _borde
     float offsetRight = size.x * scale.x;
     float offsetBottom = size.y * scale.y;
 
-    if ((0 <= newPositionX and newPositionX <= _borderX-offsetRight) and (0 <= newPositionY and newPositionY <= _borderY-offsetBottom)) {
+    if ((0 <= newPositionX and newPositionX <= _windowSize.x-offsetRight) and (0 <= newPositionY and newPositionY <= _windowSize.y-offsetBottom)) {
         getSprite().setPosition({newPositionX, newPositionY});
     }
 }
 
 
-void Player::handleInput(unsigned _borderX, unsigned _borderY) {
+void Player::handleInput(sf::Vector2u _windowSize) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-        move(0.0f, -m_speed, _borderX, _borderY);
+        move(0.0f, -m_speed, _windowSize);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-        move(-m_speed, 0.0, _borderX, _borderY);
+        move(-m_speed, 0.0, _windowSize);
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-        move(0.0f, m_speed,_borderX, _borderY);
+        move(0.0f, m_speed,_windowSize);
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-        move(m_speed, 0.0f,_borderX, _borderY);
+        move(m_speed, 0.0f,_windowSize);
     }
 }
 

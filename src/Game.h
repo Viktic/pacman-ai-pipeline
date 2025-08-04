@@ -18,7 +18,7 @@ public:
     void run();
     void render();
     void handleInput();
-    void addEntity(Type _entityType, const std::string& _filePath, float _posX = 0, float _posY = 0);
+    void addEntity(Type _entityType, const std::string& _filePath);
     sf::RenderWindow& getWindow();
 
 

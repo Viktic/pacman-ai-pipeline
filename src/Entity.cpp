@@ -10,12 +10,12 @@
 unsigned Entity::m_entityCount = 0;
 
 
-Entity::Entity(const std::string& _filePath, const float _posX, const float _posY):
+Entity::Entity(const std::string& _filePath, sf::Vector2u _spawnPosition):
 // in SMFL3 sprite needs to be initialized in the initializer list
     m_texture(_filePath),
     m_sprite(m_texture),
-    m_positionX(_posX),
-    m_positionY(_posY) {
+    m_positionX(_spawnPosition.x),
+    m_positionY(_spawnPosition.y) {
 
     m_sprite.setScale({0.05f, 0.05f});
     m_sprite.setPosition({m_positionX, m_positionY});

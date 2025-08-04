@@ -53,23 +53,21 @@ void Game::handleInput() {
     //handle Inputs in Player class
 
     Player* pPlayer = dynamic_cast<Player*>(m_pEntities[0]);
-    pPlayer->handleInput(m_borderX, m_borderY);
+    pPlayer->handleInput(m_window.getSize());
 }
-
-
 
 /*
   factory method to automatically create instances of the correct child-class and add them to
   the base class array in the Game class via polymorphism
 */
-void Game::addEntity(Type _entityType, const std::string& _filePath, float _posX, float _posY) {
+void Game::addEntity(Type _entityType, const std::string& _filePath) {
     Entity* pEntity = nullptr;
     switch (_entityType) {
         case Type::Player:
-            pEntity =  new Player(_filePath, _posX, _posY);
+            pEntity =  new Player(_filePath);
             break;
         case Type::Enemy:
-            pEntity = new Enemy(_filePath);
+            pEntity = new Enemy(_filePath, m_window.getSize());
             break;
     }
     if (pEntity != nullptr) {

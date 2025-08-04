@@ -11,13 +11,13 @@
 class Entity {
 
 public:
-    Entity(const std::string& _filePath, float _posX, float _posY);
+    Entity(const std::string& _filePath, sf::Vector2u _spawnPosition);
     virtual ~Entity();
 
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
     static size_t getEntityCount();
-    virtual void move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) = 0;
+    virtual void move(float _rateX, float _rateY, sf::Vector2u _windowSize) = 0;
 
 
 private:

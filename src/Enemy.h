@@ -10,9 +10,9 @@ class Enemy: public Entity{
 
 public:
 
-    float  setStartingPosition(float _dimension);
-    explicit Enemy(const std::string& _texturePath);
-    void move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) override;
+    sf::Vector2u setStartingPosition(sf::Vector2u _windowSize);
+    Enemy(const std::string& _texturePath, sf::Vector2u _windowSize);
+    void move(float _rateX, float _rateY, sf::Vector2u _windowSize) override;
 
 private:
     float m_speed;

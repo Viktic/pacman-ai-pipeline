@@ -11,11 +11,11 @@ class Player: public Entity {
 
     public:
 
-        void handleInput(unsigned _borderX, unsigned _borderY);
-        Player(const std::string& _textureFilePath, float _posX, float _posY);
+        void handleInput(sf::Vector2u _windowSize);
+        Player(const std::string& _textureFilePath);
         int getHealth();
         void setHealth(int _value);
-        void move(float _rateX, float _rateY, unsigned _borderX, unsigned _borderY) override;
+        void move(float _rateX, float _rateY, sf::Vector2u _windowSize) override;
 
     private:
         int m_health;
