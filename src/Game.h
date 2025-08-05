@@ -15,10 +15,12 @@ public:
     Game(unsigned  _windowSizeX, unsigned  _windowSizeY, const std::string& _title);
     ~Game();
 
+    void initialize();
     void run();
     void render();
     void handleInput();
-    void addEntity(Type _entityType, const std::string& _filePath);
+    void addEnemy(const std::string& _filePath);
+
     sf::RenderWindow& getWindow();
 
 

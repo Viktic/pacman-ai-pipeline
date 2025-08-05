@@ -6,12 +6,22 @@
 #include "Game.h"
 #include <SFML/System/Vector2.hpp>
 
+Player* Player::player = nullptr;
+
 Player::Player(const std::string &_textureFilePath):
 Entity(_textureFilePath, {0,0}),
 m_health(100),
 m_speed(3.0f) {
 
 }
+
+Player* Player::get() {
+    if (player == nullptr) {
+        player = new Player("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
+    }
+    return player;
+}
+
 
 
 void Player::setHealth(int _value) {

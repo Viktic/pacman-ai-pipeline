@@ -17,6 +17,23 @@ m_borderY(_windowSizeY) {
     m_window.setFramerateLimit(144);
 }
 
+/*
+  factory method to automatically create instances of the correct child-class and add them to
+  the base class array in the Game class via polymorphism
+*/
+void Game::addEnemy(const std::string& _filePath) {
+    Entity* pEntity = new Enemy(_filePath, m_window.getSize());
+    m_pEntities.push_back(pEntity);
+}
+
+void Game::initialize() {
+    //insert the player into the array
+    Entity* pPlayer = Player::get();
+    m_pEntities.push_back(pPlayer);
+    //insert arbitrary amount of enemys into the array
+    addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
+}
+
 
 void Game::run() {
     //game-loop
@@ -51,30 +68,11 @@ void Game::handleInput() {
 
     }
     //handle Inputs in Player class
-
-    Player* pPlayer = dynamic_cast<Player*>(m_pEntities[0]);
+    Player* pPlayer = Player::get();
     pPlayer->handleInput(m_window.getSize());
 }
 
-/*
-  factory method to automatically create instances of the correct child-class and add them to
-  the base class array in the Game class via polymorphism
-*/
-void Game::addEntity(Type _entityType, const std::string& _filePath) {
-    Entity* pEntity = nullptr;
-    switch (_entityType) {
-        case Type::Player:
-            pEntity =  new Player(_filePath);
-            break;
-        case Type::Enemy:
-            pEntity = new Enemy(_filePath, m_window.getSize());
-            break;
-    }
-    if (pEntity != nullptr) {
-        m_pEntities.push_back(pEntity);
 
-    }
-}
 
 sf::RenderWindow& Game::getWindow() {
     return m_window;

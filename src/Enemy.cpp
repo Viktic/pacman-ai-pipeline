@@ -3,22 +3,18 @@
 //
 
 #include "Enemy.h"
-#include <random>
 
 
 
-
-
+std::mt19937 Enemy::m_rng(std::random_device{}());
 
 sf::Vector2u Enemy::setStartingPosition(sf::Vector2u _windowSize) {
-    std::random_device dev;
-    std::mt19937 rng(dev());
+
     std::uniform_int_distribution<std::mt19937::result_type> distX(87,_windowSize.x-87);
     std::uniform_int_distribution<std::mt19937::result_type> distY(87,_windowSize.y-87);
-    sf::Vector2u spawnPosition = {distX(rng), distY(rng)};
+    sf::Vector2u spawnPosition = {distX(m_rng), distY(m_rng)};
     return spawnPosition;
 }
-
 
 
 Enemy::Enemy(const std::string& _texturePath, sf::Vector2u _windowSize):

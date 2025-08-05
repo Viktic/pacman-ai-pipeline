@@ -5,6 +5,7 @@
 #pragma once
 #include "Entity.h"
 #include <string>
+#include <random>
 
 class Enemy: public Entity{
 
@@ -16,6 +17,8 @@ public:
 
 private:
     float m_speed;
+    //static randomization device
+    static std::mt19937 m_rng;
 
 };
 
