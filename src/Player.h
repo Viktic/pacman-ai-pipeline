@@ -11,7 +11,11 @@ class Player: public Entity {
 
     public:
         static Player* get();
+        //set method allows to initialize the player-singleton once with the spawnPosition
+        static void set(sf::Vector2u _spawnPosition);
 
+
+        //deleted copy constructor and assignment operator
         Player(const Player&) = delete;
         Player& operator=(const Player&) = delete;
 
@@ -24,9 +28,7 @@ class Player: public Entity {
 
     private:
         static Player* player;
-        explicit Player(const std::string& _textureFilePath);
-
-
+        explicit Player(const std::string& _textureFilePath, sf::Vector2u _spawnPosition);
 
         int m_health;
         float m_speed;

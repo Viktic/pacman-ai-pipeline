@@ -10,9 +10,17 @@
 
 
 Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title):
-m_pEntities(),
 m_borderX(_windowSizeX),
-m_borderY(_windowSizeY) {
+m_borderY(_windowSizeY),
+//every string represents a row in the grid
+m_grid(//Player Position [1][1]
+    {"################",
+    "#......##......#",
+    "#.####.##.####.#",
+    "#.####.##.####.#",
+    "#.####.##.####.#",
+    "#......P.......#",
+    "################"}) {
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(144);
 }
@@ -27,20 +35,29 @@ void Game::addEnemy(const std::string& _filePath) {
 }
 
 void Game::initialize() {
+    float tileSize = 100;
+
+    //loop through the grid array
+    for (int i = 0; i < m_grid.size(); ++i) {
+        for (int j = 0; j < m_grid[0].size(); ++j) {
+            char curr  = m_grid[i][j];
+            switch (curr) {
+                case 'P':
+                    unsigned x = j*tileSize + 0.5*tileSize;
+                    unsigned y = i*tileSize + 0.5*tileSize;
+                    Player::set({x, y});
+                //WORK IN PROGRESS
+                //add Initialization for Borders, blank spaces and enemies
+            }
+        }
+    }
+
+
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
     //insert arbitrary amount of enemys into the array
     addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
-}
-
-
-void Game::run() {
-    //game-loop
-    while (m_window.isOpen()) {
-        handleInput();
-        render();
-    }
 }
 
 void Game::render() {
@@ -54,18 +71,25 @@ void Game::render() {
         Entity* curr = m_pEntities[i];
         m_window.draw(curr->getSprite());
     }
-
     m_window.display();
 }
 
+
+void Game::run() {
+    //game-loop
+    while (m_window.isOpen()) {
+        handleInput();
+        render();
+    }
+}
+
 void Game::handleInput() {
-    while (const std::optional event = m_window.pollEvent())
+    while (auto event = m_window.pollEvent())
     {
         if (event->is<sf::Event::Closed>())
         {
             m_window.close();
         }
-
     }
     //handle Inputs in Player class
     Player* pPlayer = Player::get();
@@ -73,10 +97,15 @@ void Game::handleInput() {
 }
 
 
+std::vector<std::string>* Game::getGrid() {
+    return &m_grid;
+}
+
 
 sf::RenderWindow& Game::getWindow() {
     return m_window;
 }
+
 
 
 Game::~Game() {
@@ -84,9 +113,10 @@ Game::~Game() {
     size_t entityCount = Entity::getEntityCount();
     for (size_t i = 0; i < entityCount; ++i) {
         Entity* curr = m_pEntities[i];
-        delete curr;
+        if (curr != Player::get()) {
+            delete curr;
+        }
     }
-
 }
 
 

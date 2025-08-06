@@ -8,19 +8,25 @@
 
 Player* Player::player = nullptr;
 
-Player::Player(const std::string &_textureFilePath):
-Entity(_textureFilePath, {0,0}),
+Player::Player(const std::string &_textureFilePath, sf::Vector2u _spawnPosition):
+Entity(_textureFilePath, _spawnPosition),
 m_health(100),
 m_speed(3.0f) {
 
 }
 
-Player* Player::get() {
+void Player::set(sf::Vector2u _spawnPosition) {
     if (player == nullptr) {
-        player = new Player("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
+        player = new Player("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", _spawnPosition);
     }
+}
+
+
+
+Player* Player::get() {
     return player;
 }
+
 
 
 
@@ -49,7 +55,6 @@ void Player::move(float _rateX, float _rateY, sf::Vector2u _windowSize) {
         getSprite().setPosition({newPositionX, newPositionY});
     }
 }
-
 
 void Player::handleInput(sf::Vector2u _windowSize) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {

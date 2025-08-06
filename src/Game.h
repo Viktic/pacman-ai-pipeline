@@ -7,6 +7,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 
+
 class Entity;
 
 class Game {
@@ -21,10 +22,12 @@ public:
     void handleInput();
     void addEnemy(const std::string& _filePath);
 
+    std::vector<std::string>* getGrid();
     sf::RenderWindow& getWindow();
 
 
 private:
+    std::vector<std::string> m_grid;
     std::vector<Entity*> m_pEntities;
     sf::RenderWindow m_window;
     unsigned m_borderX;
