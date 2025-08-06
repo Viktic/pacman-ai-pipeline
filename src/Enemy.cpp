@@ -8,6 +8,9 @@
 
 std::mt19937 Enemy::m_rng(std::random_device{}());
 
+
+//feature currently nod needed
+/*
 sf::Vector2u Enemy::setStartingPosition(sf::Vector2u _windowSize) {
 
     std::uniform_int_distribution<std::mt19937::result_type> distX(87,_windowSize.x-87);
@@ -15,11 +18,12 @@ sf::Vector2u Enemy::setStartingPosition(sf::Vector2u _windowSize) {
     sf::Vector2u spawnPosition = {distX(m_rng), distY(m_rng)};
     return spawnPosition;
 }
+*/
 
 
-Enemy::Enemy(const std::string& _texturePath, sf::Vector2u _windowSize):
+Enemy::Enemy(const std::string& _texturePath, sf::Vector2u _spawnPosition):
 m_speed(2.0f),
-Entity(_texturePath, setStartingPosition(_windowSize)) {
+Entity(_texturePath, _spawnPosition) {
 }
 
 void Enemy::move(float _rateX, float _rateY, sf::Vector2u _windowSize ) {

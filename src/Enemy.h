@@ -10,8 +10,11 @@
 class Enemy: public Entity{
 
 public:
-
+    //feature currently not needed
+    /*
     sf::Vector2u setStartingPosition(sf::Vector2u _windowSize);
+    */
+
     Enemy(const std::string& _texturePath, sf::Vector2u _windowSize);
     void move(float _rateX, float _rateY, sf::Vector2u _windowSize) override;
 

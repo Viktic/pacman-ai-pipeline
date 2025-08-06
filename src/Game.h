@@ -20,7 +20,7 @@ public:
     void run();
     void render();
     void handleInput();
-    void addEnemy(const std::string& _filePath);
+    void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
 
     std::vector<std::string>* getGrid();
     sf::RenderWindow& getWindow();

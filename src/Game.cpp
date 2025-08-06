@@ -19,7 +19,7 @@ m_grid(//Player Position [1][1]
     "#.####.##.####.#",
     "#.####.##.####.#",
     "#.####.##.####.#",
-    "#......P.......#",
+    "#.E....P...E...#",
     "################"}) {
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(144);
@@ -29,8 +29,8 @@ m_grid(//Player Position [1][1]
   factory method to automatically create instances of the correct child-class and add them to
   the base class array in the Game class via polymorphism
 */
-void Game::addEnemy(const std::string& _filePath) {
-    Entity* pEntity = new Enemy(_filePath, m_window.getSize());
+void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
+    Entity* pEntity = new Enemy(_filePath, _spawnPosition);
     m_pEntities.push_back(pEntity);
 }
 
@@ -42,12 +42,20 @@ void Game::initialize() {
         for (int j = 0; j < m_grid[0].size(); ++j) {
             char curr  = m_grid[i][j];
             switch (curr) {
-                case 'P':
-                    unsigned x = j*tileSize + 0.5*tileSize;
-                    unsigned y = i*tileSize + 0.5*tileSize;
-                    Player::set({x, y});
-                //WORK IN PROGRESS
-                //add Initialization for Borders, blank spaces and enemies
+                case 'P': {
+                    unsigned px = j*tileSize + 0.5*tileSize;
+                    unsigned py = i*tileSize + 0.5*tileSize;
+                    Player::set({px, py});
+                    break;
+                }
+                case 'E': {
+                    unsigned ex = j*tileSize + 0.5*tileSize;
+                    unsigned ey = i*tileSize + 0.5*tileSize;
+                    addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", {ex, ey});
+                    break;
+                }
+                    //WORK IN  PROGRESS
+                //add Initialization for Borders, and blank spaces
             }
         }
     }
@@ -56,8 +64,6 @@ void Game::initialize() {
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
-    //insert arbitrary amount of enemys into the array
-    addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png");
 }
 
 void Game::render() {
