@@ -21,6 +21,8 @@ public:
     void render();
     void handleInput();
     void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
+    void addBorder(sf::Vector2f _spawnPosition, float _tileSize);
+
 
     std::vector<std::string>* getGrid();
     sf::RenderWindow& getWindow();
@@ -28,6 +30,7 @@ public:
 
 private:
     std::vector<std::string> m_grid;
+    std::vector<sf::RectangleShape*> m_pBorders;
     std::vector<Entity*> m_pEntities;
     sf::RenderWindow m_window;
     unsigned m_borderX;

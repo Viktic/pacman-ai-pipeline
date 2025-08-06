@@ -13,14 +13,20 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
 m_borderX(_windowSizeX),
 m_borderY(_windowSizeY),
 //every string represents a row in the grid
-m_grid(//Player Position [1][1]
-    {"################",
+m_grid(
+{
+    "################",
     "#......##......#",
     "#.####.##.####.#",
+    "#..............#",
+    "#.##.#.##.#.##.#",
+    "#....#.P..#....#",
+    "#.##.#.##.#.##.#",
+    "#..............#",
     "#.####.##.####.#",
-    "#.####.##.####.#",
-    "#.E....P...E...#",
-    "################"}) {
+    "#E.....##.....E#",
+    "################"
+}) {
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(144);
 }
@@ -34,8 +40,17 @@ void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
     m_pEntities.push_back(pEntity);
 }
 
+void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize) {
+    sf::RectangleShape* rect = new sf::RectangleShape({_tileSize, _tileSize});
+    rect->setPosition(_spawnPosition);
+    rect->setFillColor(sf::Color::Black);
+    rect->setOutlineColor(sf::Color::Blue);
+    rect->setOutlineThickness(5.f);
+    m_pBorders.push_back(rect);
+}
+
 void Game::initialize() {
-    float tileSize = 100;
+    float tileSize = 80;
 
     //loop through the grid array
     for (int i = 0; i < m_grid.size(); ++i) {
@@ -54,23 +69,35 @@ void Game::initialize() {
                     addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", {ex, ey});
                     break;
                 }
-                    //WORK IN  PROGRESS
-                //add Initialization for Borders, and blank spaces
+                case '#': {
+                    float bx = j*tileSize + 0.5*tileSize;
+                    float by = i*tileSize + 0.5*tileSize;
+                    addBorder({bx, by}, tileSize);
+                    break;
+                }
+                case '.': {
+                    break;
+                }
             }
         }
     }
-
 
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
 }
-
 void Game::render() {
-    //render
+
     m_window.clear();
 
-    //render gameObjects
+    //render border-objects
+    size_t borderCount = m_pBorders.size();
+
+    for (size_t i = 0; i < borderCount; ++i) {
+        sf::RectangleShape* curr = m_pBorders[i];
+        m_window.draw(*curr);
+    }
+    //render entity-objects
     size_t entityCount = Entity::getEntityCount();
 
     for (size_t i = 0; i < entityCount; ++i) {
@@ -81,11 +108,13 @@ void Game::render() {
 }
 
 
+
+
 void Game::run() {
     //game-loop
     while (m_window.isOpen()) {
-        handleInput();
         render();
+        handleInput();
     }
 }
 
@@ -107,12 +136,9 @@ std::vector<std::string>* Game::getGrid() {
     return &m_grid;
 }
 
-
 sf::RenderWindow& Game::getWindow() {
     return m_window;
 }
-
-
 
 Game::~Game() {
 
@@ -122,6 +148,11 @@ Game::~Game() {
         if (curr != Player::get()) {
             delete curr;
         }
+    }
+    size_t borderCount = m_pBorders.size();
+    for (size_t i = 0; i < borderCount; ++i) {
+        sf::RectangleShape* curr = m_pBorders[i];
+        delete curr;
     }
 }
 
