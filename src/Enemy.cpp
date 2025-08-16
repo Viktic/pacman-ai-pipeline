@@ -4,9 +4,11 @@
 
 #include "Enemy.h"
 
-
-
+//feature currently not needed
+/*
 std::mt19937 Enemy::m_rng(std::random_device{}());
+*/
+
 
 
 //feature currently nod needed

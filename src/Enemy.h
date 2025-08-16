@@ -21,8 +21,10 @@ public:
 private:
     float m_speed;
     //static randomization device
+    //feature currently not needed
+    /*
     static std::mt19937 m_rng;
-
+    */
 };
 
 
