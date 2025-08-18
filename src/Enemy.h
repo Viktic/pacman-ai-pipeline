@@ -16,7 +16,7 @@ public:
     */
 
     Enemy(const std::string& _texturePath, sf::Vector2u _windowSize);
-    void move(float _rateX, float _rateY, sf::Vector2u _windowSize) override;
+    void move(float tileSize, std::vector<std::string>*) override;
 
 private:
     float m_speed;

@@ -5,13 +5,15 @@
 #include "Player.h"
 #include "Game.h"
 #include <SFML/System/Vector2.hpp>
+#include <iostream>
 
 Player* Player::player = nullptr;
 
 Player::Player(const std::string &_textureFilePath, sf::Vector2u _spawnPosition):
 Entity(_textureFilePath, _spawnPosition),
 m_health(100),
-m_speed(3.0f) {
+m_speed(3.0f),
+m_momentum({0,0}){
 
 }
 
@@ -22,12 +24,9 @@ void Player::set(sf::Vector2u _spawnPosition) {
 }
 
 
-
 Player* Player::get() {
     return player;
 }
-
-
 
 
 void Player::setHealth(int _value) {
@@ -38,12 +37,9 @@ int Player::getHealth() {
     return m_health;
 }
 
-void Player::move(float _rateX, float _rateY, sf::Vector2u _windowSize) {
+void Player::move(float _tileSize, std::vector<std::string>* _grid) {
 
-    float positionX = getSprite().getPosition().x;
-    float positionY = getSprite().getPosition().y;
-    float newPositionX = positionX + _rateX;
-    float newPositionY = positionY + _rateY;
+    if (m_momentum == sf::Vector2i{0, 0}) return;
 
     sf::Vector2f scale = getSprite().getScale();
     //WORK IN PROGRESS
@@ -51,25 +47,28 @@ void Player::move(float _rateX, float _rateY, sf::Vector2u _windowSize) {
     float offsetRight = size.x * scale.x;
     float offsetBottom = size.y * scale.y;
 
-    if ((0 <= newPositionX and newPositionX <= _windowSize.x-offsetRight) and (0 <= newPositionY and newPositionY <= _windowSize.y-offsetBottom)) {
-        getSprite().setPosition({newPositionX, newPositionY});
+
+    sf::Vector2f pos = getSprite().getPosition();
+    sf::Vector2f newPos = {
+        pos.x + m_momentum.x * m_speed,
+        pos.y + m_momentum.y * m_speed,
+    };
+
+    int col = std::round((newPos.x - 0.5f * _tileSize)/ _tileSize);
+    int row = std::round((newPos.y - 0.5f * _tileSize) / _tileSize);
+
+    if (row < 0 || row >= _grid->size() || col < 0 || col >= (*_grid)[0].size() || (*_grid)[row][col] == '#') {
+        m_momentum = {0, 0}; //
+        return;
     }
+
+    getSprite().setPosition(newPos);
 }
 
-void Player::handleInput(sf::Vector2u _windowSize) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-        move(0.0f, -m_speed, _windowSize);
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-        move(-m_speed, 0.0, _windowSize);
-
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-        move(0.0f, m_speed,_windowSize);
-
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-        move(m_speed, 0.0f,_windowSize);
-    }
+void Player::handleInput(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Key::W) m_momentum = {0, -1};
+    if (key == sf::Keyboard::Key::S) m_momentum = {0, 1};
+    if (key == sf::Keyboard::Key::A) m_momentum = {-1, 0};
+    if (key == sf::Keyboard::Key::D) m_momentum = {1, 0};
 }
 

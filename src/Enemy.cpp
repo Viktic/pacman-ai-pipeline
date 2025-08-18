@@ -28,17 +28,18 @@ m_speed(2.0f),
 Entity(_texturePath, _spawnPosition) {
 }
 
-void Enemy::move(float _rateX, float _rateY, sf::Vector2u _windowSize ) {
+//Dummy implementation (WORK IN PROGRESS)
+void Enemy::move(float _tileSize, std::vector<std::string>* _grid) {
     {
         float positionX = getSprite().getPosition().x;
         float positionY = getSprite().getPosition().y;
-        float newPositionX = positionX + _rateX;
-        float newPositionY = positionY + _rateY;
+        float newPositionX = positionX;
+        float newPositionY = positionY;
 
-        if (0 <= newPositionX and newPositionX <= _windowSize.x) {
+        if (0 <= newPositionX and newPositionX <= _tileSize) {
             getSprite().setPosition({newPositionX, newPositionY});
         }
-        if (0 <= newPositionY and newPositionX <= _windowSize.y) {
+        if (0 <= newPositionY and newPositionX <= _tileSize) {
             getSprite().setPosition({newPositionX, newPositionY});
         }
     }

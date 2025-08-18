@@ -22,7 +22,7 @@ public:
     void handleInput();
     void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
-
+    float getTileSize();
 
     std::vector<std::string>* getGrid();
     sf::RenderWindow& getWindow();
@@ -47,6 +47,7 @@ private:
     //hash set which contains the grid coordinates of all valid crossings
     std::unordered_set<std::pair<int,int>, m_pairHash> m_crossings;
 
+    float m_tileSize;
     unsigned m_borderX;
     unsigned m_borderY;
 

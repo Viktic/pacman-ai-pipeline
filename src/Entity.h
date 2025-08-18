@@ -17,7 +17,7 @@ public:
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
     static size_t getEntityCount();
-    virtual void move(float _rateX, float _rateY, sf::Vector2u _windowSize) = 0;
+    virtual void move(float _tileSize, std::vector<std::string>*) = 0;
 
 
 private:

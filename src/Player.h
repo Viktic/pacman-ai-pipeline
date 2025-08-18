@@ -19,10 +19,10 @@ class Player: public Entity {
         Player(const Player&) = delete;
         Player& operator=(const Player&) = delete;
 
-        void handleInput(sf::Vector2u _windowSize);
+        void handleInput(sf::Keyboard::Key key);
         int getHealth();
         void setHealth(int _value);
-        void move(float _rateX, float _rateY, sf::Vector2u _windowSize) override;
+        void move(float _tileSize, std::vector<std::string>*) override;
 
 
 
@@ -30,10 +30,11 @@ class Player: public Entity {
         static Player* player;
         explicit Player(const std::string& _textureFilePath, sf::Vector2u _spawnPosition);
 
+        //Momentum Variable to keep track of the players movement direction
+        sf::Vector2i m_momentum;
+
         int m_health;
         float m_speed;
-
-
 };
 
 

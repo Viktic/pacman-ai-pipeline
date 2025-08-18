@@ -27,7 +27,8 @@ m_grid(
     "#.####.##.####.#",
     "#E.....##.....E#",
     "################"
-}) {
+}),
+m_tileSize(80){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(144);
 }
@@ -111,7 +112,6 @@ bool Game::validCrossing(int _pX, int _pY) {
 
 
 void Game::initialize() {
-    float tileSize = 80;
 
     //loop through the grid array
     for (int i = 0; i < m_grid.size(); ++i) {
@@ -121,29 +121,32 @@ void Game::initialize() {
                 m_crossings.insert({j,i});
             }
             //TESTING ONLY (highlight crossing location in grid via hashing)
+            /*
             if (m_crossings.find({j,i}) != m_crossings.end()) {
-                float pX = j* tileSize + 0.5*tileSize;
-                float pY = i* tileSize + 0.5*tileSize;
-                addBorder({pX, pY}, tileSize, sf::Color::Red);
+                float pX = j* m_tileSize + 0.5*m_tileSize;
+                float pY = i* m_tileSize + 0.5*m_tileSize;
+                addBorder({pX, pY}, m_tileSize, sf::Color::Red);
             }
+            */
+
             //initialize game map
             switch (curr) {
                 case 'P': {
-                    unsigned px = j*tileSize + 0.5*tileSize;
-                    unsigned py = i*tileSize + 0.5*tileSize;
+                    unsigned px = j*m_tileSize + 0.5*m_tileSize;
+                    unsigned py = i*m_tileSize + 0.5*m_tileSize;
                     Player::set({px, py});
                     break;
                 }
                 case 'E': {
-                    unsigned ex = j*tileSize + 0.5*tileSize;
-                    unsigned ey = i*tileSize + 0.5*tileSize;
+                    unsigned ex = j*m_tileSize + 0.5*m_tileSize;
+                    unsigned ey = i*m_tileSize + 0.5*m_tileSize;
                     addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", {ex, ey});
                     break;
                 }
                 case '#': {
-                    float bx = j*tileSize + 0.5*tileSize;
-                    float by = i*tileSize + 0.5*tileSize;
-                    addBorder({bx, by}, tileSize, sf::Color::Blue);
+                    float bx = j*m_tileSize + 0.5*m_tileSize;
+                    float by = i*m_tileSize + 0.5*m_tileSize;
+                    addBorder({bx, by}, m_tileSize, sf::Color::Blue);
                     break;
                 }
                 case '.': {
@@ -180,27 +183,27 @@ void Game::render() {
 }
 
 void Game::run() {
-    //game-loop
+    Player* pPlayer = Player::get();
+
     while (m_window.isOpen()) {
-        render();
         handleInput();
+        pPlayer->move(getTileSize(), getGrid());
+        render();
     }
 }
 
 void Game::handleInput() {
-    while (auto event = m_window.pollEvent())
-    {
-        if (event->is<sf::Event::Closed>())
-        {
+    Player* pPlayer = Player::get();
+
+    while (auto eventOpt = m_window.pollEvent()) { // eventOpt ist std::optional<sf::Event>
+        if (eventOpt->is<sf::Event::Closed>()) {
             m_window.close();
         }
+        else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
+            pPlayer->handleInput(keyEvent->code); // keyEvent->code ist sf::Keyboard::Key
+        }
     }
-    //handle Inputs in Player class
-    Player* pPlayer = Player::get();
-    pPlayer->handleInput(m_window.getSize());
 }
-
-
 std::vector<std::string>* Game::getGrid() {
     return &m_grid;
 }
@@ -209,10 +212,13 @@ sf::RenderWindow& Game::getWindow() {
     return m_window;
 }
 
+float Game::getTileSize() {
+    return m_tileSize;
+}
+
 Game::~Game() {
 
-    size_t entityCount = Entity::getEntityCount();
-    for (size_t i = 0; i < entityCount; ++i) {
+    for (size_t i = 0; i < m_pEntities.size(); ++i) {
         Entity* curr = m_pEntities[i];
         if (curr != Player::get()) {
             delete curr;
