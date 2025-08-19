@@ -29,7 +29,7 @@ Entity(_texturePath, _spawnPosition) {
 }
 
 //Dummy implementation (WORK IN PROGRESS)
-void Enemy::move(float _tileSize, std::vector<std::string>* _grid) {
+void Enemy::move(float _tileSize, std::vector<std::string>* _grid, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings)  {
     {
         float positionX = getSprite().getPosition().x;
         float positionY = getSprite().getPosition().y;

@@ -3,9 +3,12 @@
 //
 
 #pragma once
+
+#include "tool.h"
 #include <SFML/Graphics/Sprite.hpp>
 #include "SFML/Graphics/Texture.hpp"
 #include <string>
+#include <unordered_set>
 
 
 class Entity {
@@ -17,7 +20,7 @@ public:
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
     static size_t getEntityCount();
-    virtual void move(float _tileSize, std::vector<std::string>*) = 0;
+    virtual void move(float _tileSize, std::vector<std::string>*, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) = 0;
 
 
 private:

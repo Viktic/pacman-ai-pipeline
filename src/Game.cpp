@@ -120,6 +120,7 @@ void Game::initialize() {
             if (validCrossing(j, i)) {
                 m_crossings.insert({j,i});
             }
+
             //TESTING ONLY (highlight crossing location in grid via hashing)
             /*
             if (m_crossings.find({j,i}) != m_crossings.end()) {
@@ -187,7 +188,7 @@ void Game::run() {
 
     while (m_window.isOpen()) {
         handleInput();
-        pPlayer->move(getTileSize(), getGrid());
+        pPlayer->move(getTileSize(), getGrid(), &m_crossings);
         render();
     }
 }

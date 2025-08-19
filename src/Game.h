@@ -3,10 +3,12 @@
 //
 #pragma once
 #include "EntityType.h"
+#include "tool.h"
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <unordered_set>
+
 
 class Entity;
 
@@ -32,12 +34,7 @@ private:
     //private helper method to find crossings in the grid
     bool validCrossing(int _pX, int _pY);
 
-    struct m_pairHash {
-        //creates hash for std::pair
-        std::size_t operator() (std::pair<int, int> _pair) {
-            return _pair.first * 42 + _pair.second;
-        }
-    };
+
 
     std::vector<std::string> m_grid;
     std::vector<sf::RectangleShape*> m_pBorders;
@@ -45,7 +42,7 @@ private:
     sf::RenderWindow m_window;
 
     //hash set which contains the grid coordinates of all valid crossings
-    std::unordered_set<std::pair<int,int>, m_pairHash> m_crossings;
+    std::unordered_set<sf::Vector2i, tool::sfVector2iHash> m_crossings;
 
     float m_tileSize;
     unsigned m_borderX;
