@@ -3,12 +3,10 @@
 //
 
 #include "Enemy.h"
-
+#include <iostream>
 //feature currently not needed
-/*
-std::mt19937 Enemy::m_rng(std::random_device{}());
-*/
 
+std::mt19937 Enemy::m_rng(std::random_device{}());
 
 
 //feature currently nod needed
@@ -25,24 +23,55 @@ sf::Vector2u Enemy::setStartingPosition(sf::Vector2u _windowSize) {
 
 Enemy::Enemy(const std::string& _texturePath, sf::Vector2u _spawnPosition):
 m_speed(2.0f),
+m_momentum({0.0f, 0.0f}),
 Entity(_texturePath, _spawnPosition) {
 }
 
-//Dummy implementation (WORK IN PROGRESS)
 void Enemy::move(float _tileSize, std::vector<std::string>* _grid, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings)  {
-    {
-        float positionX = getSprite().getPosition().x;
-        float positionY = getSprite().getPosition().y;
-        float newPositionX = positionX;
-        float newPositionY = positionY;
+    //current enemy position
+    sf::Vector2f pos = getSprite().getPosition();
 
-        if (0 <= newPositionX and newPositionX <= _tileSize) {
-            getSprite().setPosition({newPositionX, newPositionY});
+    //get the grid coordinates
+    int col = std::round((pos.x - 0.5f * _tileSize) / _tileSize);
+    int row = std::round((pos.y - 0.5f * _tileSize) / _tileSize);
+    //directions vector to keep track of possible movement directions
+    std::vector<sf::Vector2f> directions;
+
+    float centerX = col * _tileSize + 0.5f * _tileSize;
+    float centerY = row * _tileSize + 0.5f * _tileSize;
+    //check if current tile is a crossing
+    float epsilon = 2.0f;
+    if (_crossings->find({col, row}) != _crossings->end() and std::abs(pos.x - centerX) < epsilon and
+    std::abs(pos.y - centerY) < epsilon){
+        //check all possible grid coordinates
+        char up    = (*_grid)[row-1][col];
+        char down  = (*_grid)[row+1][col];
+        char left  = (*_grid)[row][col-1];
+        char right = (*_grid)[row][col+1];
+        if (up != '#') directions.push_back({0.0f,-1.0f});
+        if (down != '#') directions.push_back({0.0f,1.0f});
+        if (left != '#') directions.push_back({-1.0f,0.0f});
+        if (right != '#') directions.push_back({1.0f,0.0f});
+        //randomly selects a valid direction from the directions vector
+        if (!directions.empty()) {
+            std::uniform_int_distribution<int> dist(0, directions.size()-1);
+            int directionIndex = dist(m_rng);
+            m_momentum = directions[directionIndex];
         }
-        if (0 <= newPositionY and newPositionX <= _tileSize) {
-            getSprite().setPosition({newPositionX, newPositionY});
-        }
+
     }
+
+    sf::Vector2f newPos = {
+        pos.x + m_momentum.x * m_speed,
+        pos.y + m_momentum.y * m_speed,
+    };
+
+
+    getSprite().setPosition(newPos);
+
+
+
+
 }
 
 

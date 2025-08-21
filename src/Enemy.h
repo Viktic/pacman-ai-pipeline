@@ -20,11 +20,10 @@ public:
 
 private:
     float m_speed;
+    sf::Vector2f m_momentum;
     //static randomization device
-    //feature currently not needed
-    /*
     static std::mt19937 m_rng;
-    */
+
 };
 
 

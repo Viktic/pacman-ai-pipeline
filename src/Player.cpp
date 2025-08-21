@@ -55,9 +55,6 @@ void Player::move(float _tileSize, std::vector<std::string>* _grid, std::unorder
     //actual centered player position
     sf::Vector2f pos = getSprite().getPosition();
 
-    //current player grid position
-        int col = std::round((pos.x - 0.5f * _tileSize) / _tileSize);
-        int row = std::round((pos.y - 0.5f * _tileSize) / _tileSize);
 
     sf::Vector2f newPos = {
         pos.x + m_momentum.x * m_speed,
@@ -94,11 +91,10 @@ void Player::move(float _tileSize, std::vector<std::string>* _grid, std::unorder
             //if player is at the center of the current crossing check for the possible movements
 
             //buffer is not empty
-            if (m_buffer != m_buffer * 0.0f) {
+            if (m_buffer != sf::Vector2f(0.0f, 0.0f)){
                 m_momentum = m_buffer;
                 m_buffer = {0.0f, 0.0f};
             }
-
         }
     }
 

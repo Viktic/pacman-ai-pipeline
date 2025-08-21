@@ -17,7 +17,7 @@ m_borderY(_windowSizeY),
 m_grid(
 {
     "################",
-    "#......##......#",
+    "#......##E.....#",
     "#.####.##.####.#",
     "#..............#",
     "#.##.#.##.#.##.#",
@@ -41,6 +41,7 @@ m_tileSize(80){
 */
 void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
     Entity* pEntity = new Enemy(_filePath, _spawnPosition);
+    pEntity->getSprite().setColor(sf::Color::Red);
     m_pEntities.push_back(pEntity);
 }
 
@@ -188,7 +189,9 @@ void Game::run() {
 
     while (m_window.isOpen()) {
         handleInput();
-        pPlayer->move(getTileSize(), getGrid(), &m_crossings);
+        for (size_t i = 0; i < m_pEntities.size(); ++i) {
+            m_pEntities[i]->move(getTileSize(), getGrid(), &m_crossings);
+        }
         render();
     }
 }
