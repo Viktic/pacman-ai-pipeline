@@ -17,7 +17,7 @@ m_borderY(_windowSizeY),
 m_grid(
 {
     "################",
-    "#......##.E...#",
+    "#......##.E....#",
     "#.####.##.####.#",
     "#..............#",
     "#.##.#.##.#.##.#",
@@ -190,7 +190,7 @@ void Game::run() {
     while (m_window.isOpen()) {
         handleInput();
         for (size_t i = 0; i < m_pEntities.size(); ++i) {
-            m_pEntities[i]->move(getTileSize(), getGrid(), &m_crossings);
+            m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
         }
         render();
     }
@@ -208,8 +208,8 @@ void Game::handleInput() {
         }
     }
 }
-std::vector<std::string>* Game::getGrid() {
-    return &m_grid;
+const std::vector<std::string>& Game::getGrid() const {
+    return m_grid;
 }
 
 sf::RenderWindow& Game::getWindow() {

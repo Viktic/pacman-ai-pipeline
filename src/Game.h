@@ -26,15 +26,13 @@ public:
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     float getTileSize();
 
-    std::vector<std::string>* getGrid() ;
+    const std::vector<std::string>& getGrid() const;
     sf::RenderWindow& getWindow();
 
 
 private:
     //private helper method to find crossings in the grid
     bool validCrossing(int _pX, int _pY);
-
-
 
     std::vector<std::string> m_grid;
     std::vector<sf::RectangleShape*> m_pBorders;

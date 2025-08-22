@@ -38,7 +38,7 @@ int Player::getHealth() {
     return m_health;
 }
 
-void Player::move(float _tileSize, std::vector<std::string>* _grid, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) {
+void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
 
     //first Momentum impulse
     if (m_momentum == sf::Vector2f{0.0f, 0.0f}) {
@@ -80,7 +80,7 @@ void Player::move(float _tileSize, std::vector<std::string>* _grid, std::unorder
     }
 
     //check if the next grid position is a crossing
-    if (_crossings->find({nextCol, nextRow}) != _crossings->end()) {
+    if (_crossings.find({nextCol, nextRow}) != _crossings.end()) {
         //check if player is at the center of the current crossing
         float centerX = nextCol * _tileSize + 0.5f * _tileSize;
         float centerY = nextRow * _tileSize + 0.5f * _tileSize;
@@ -99,7 +99,7 @@ void Player::move(float _tileSize, std::vector<std::string>* _grid, std::unorder
     }
 
 
-    if (nextRow < 0 || nextRow >= _grid->size() || nextCol < 0 || nextCol >= (*_grid)[0].size() || (*_grid)[nextRow][nextCol] == '#') {
+    if (nextRow < 0 || nextRow >= _grid.size() || nextCol < 0 || nextCol >= _grid[0].size() || _grid[nextRow][nextCol] == '#') {
         m_momentum *= -1.0f;
         return;
     }

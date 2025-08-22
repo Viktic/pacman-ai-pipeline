@@ -20,7 +20,7 @@ public:
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
     static size_t getEntityCount();
-    virtual void move(float _tileSize, std::vector<std::string>* _grid, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) = 0;
+    virtual void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) = 0;
 
 
 private:

@@ -23,7 +23,7 @@ class Player: public Entity {
         void handleInput(sf::Keyboard::Key _key);
         int getHealth();
         void setHealth(int _value);
-        void move(float _tileSize, std::vector<std::string>*, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) override;
+        void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) override;
 
 
 
