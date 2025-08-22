@@ -16,7 +16,7 @@ public:
     */
 
     Enemy(const std::string& _texturePath, sf::Vector2u _windowSize);
-    void move(float tileSize, std::vector<std::string>*, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) override;
+    void move(float tileSize, std::vector<std::string>* _grid, std::unordered_set<sf::Vector2i, tool::sfVector2iHash>* _crossings) override;
 
 private:
     float m_speed;

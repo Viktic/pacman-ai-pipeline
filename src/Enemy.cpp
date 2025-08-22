@@ -48,17 +48,37 @@ void Enemy::move(float _tileSize, std::vector<std::string>* _grid, std::unordere
         char down  = (*_grid)[row+1][col];
         char left  = (*_grid)[row][col-1];
         char right = (*_grid)[row][col+1];
-        if (up != '#') directions.push_back({0.0f,-1.0f});
-        if (down != '#') directions.push_back({0.0f,1.0f});
-        if (left != '#') directions.push_back({-1.0f,0.0f});
-        if (right != '#') directions.push_back({1.0f,0.0f});
-        //randomly selects a valid direction from the directions vector
-        if (!directions.empty()) {
-            std::uniform_int_distribution<int> dist(0, directions.size()-1);
-            int directionIndex = dist(m_rng);
-            m_momentum = directions[directionIndex];
+        //check if the direction is blocked and not the inverse of the current direction
+        if (up != '#' and m_momentum != sf::Vector2f{0.0f, -1.0f} * -1.0f) {
+            directions.push_back({0.0f,-1.0f});
         }
-
+        if (down != '#' and m_momentum != sf::Vector2f{0.0f, 1.0f} * -1.0f) {
+            directions.push_back({0.0f,1.0f});
+        }
+        if (left != '#' and m_momentum != sf::Vector2f{-1.0f, 0.0f} * -1.0f) {
+            directions.push_back({-1.0f,0.0f});
+        }
+        if (right != '#' and m_momentum != sf::Vector2f{1.0f, 0.0f} * -1.0f) {
+            directions.push_back({1.0f,0.0f});
+        }
+    }
+    //set initial impulse if enemy spawn position is a corridor
+    else if (_crossings->find({col, row}) == _crossings->end() and m_momentum == sf::Vector2f{0.0f, 0.0f}) {
+        //check if one direction is blocked (possible directions can only be orthogonal)
+        char up = (*_grid)[row-1][col];
+        if (up == '#') {
+            directions.push_back({1.0f, 0.0f});
+            directions.push_back({-1.0f, 0.0f});
+        } else {
+            directions.push_back({0.0f, 1.0f});
+            directions.push_back({0.0f, -1.0f});
+        }
+    }
+    //randomly selects a valid direction from the directions vector
+    if (!directions.empty()) {
+        std::uniform_int_distribution<int> dist(0, directions.size()-1);
+        int directionIndex = dist(m_rng);
+        m_momentum = directions[directionIndex];
     }
 
     sf::Vector2f newPos = {
@@ -68,9 +88,6 @@ void Enemy::move(float _tileSize, std::vector<std::string>* _grid, std::unordere
 
 
     getSprite().setPosition(newPos);
-
-
-
 
 }
 

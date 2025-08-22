@@ -26,7 +26,7 @@ public:
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     float getTileSize();
 
-    std::vector<std::string>* getGrid();
+    std::vector<std::string>* getGrid() ;
     sf::RenderWindow& getWindow();
 
 
