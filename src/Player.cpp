@@ -38,6 +38,11 @@ int Player::getHealth() {
     return m_health;
 }
 
+sf::Vector2f& Player::getMomentum() {
+    return m_momentum;
+}
+ 
+
 void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
 
     //first Momentum impulse

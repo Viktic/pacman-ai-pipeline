@@ -11,6 +11,8 @@
 
 
 class Entity;
+class Player;
+class Enemy;
 
 class Game {
 
@@ -25,6 +27,7 @@ public:
     void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     float getTileSize();
+    void checkCollision(Player& _player, Enemy& _enemy);
 
     const std::vector<std::string>& getGrid() const;
     sf::RenderWindow& getWindow();
@@ -45,6 +48,7 @@ private:
     float m_tileSize;
     unsigned m_borderX;
     unsigned m_borderY;
+    bool m_gameRunning;
 
 };
 

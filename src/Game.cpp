@@ -6,6 +6,8 @@
 #include "Entity.h"
 #include "Player.h"
 #include "Enemy.h"
+#include <iostream>
+#include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 
 
@@ -161,6 +163,7 @@ void Game::initialize() {
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
+    m_gameRunning = true; 
 }
 
 void Game::render() {
@@ -184,13 +187,66 @@ void Game::render() {
     m_window.display();
 }
 
+
+//check collision between player and enemies 
+void Game::checkCollision(Player& _player, Enemy& _enemy) {
+
+    sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
+    sf::FloatRect enemyBounds = _enemy.getSprite().getGlobalBounds();
+    
+
+    //hitbox tolerance relative to player sprite size
+
+    sf::Vector2u playerSpriteSize = _player.getSprite().getTexture().getSize();
+    sf::Vector2f playerSpriteScale = _player.getSprite().getScale(); 
+
+    float playerToleranceX = playerBounds.size.x * 0.15f; 
+    float playerToleranceY = playerBounds.size.y * 0.15f; 
+
+
+    //hitbox tolerance relative to enemy sprite size
+
+    sf::Vector2u enemySpriteSize = _enemy.getSprite().getTexture().getSize();
+    sf::Vector2f enemySpriteScale = _enemy.getSprite().getScale();
+
+    float enemyToleranceX = enemyBounds.size.x * 0.15f; 
+    float enemyToleranceY = enemyBounds.size.y * 0.15f; 
+
+
+    playerBounds.position.x += playerToleranceX;
+    playerBounds.position.y += playerToleranceY;
+    playerBounds.size.x -= 2 * playerToleranceX;
+    playerBounds.size.y -= 2 * playerToleranceY;
+
+    enemyBounds.position.x += enemyToleranceX;
+    enemyBounds.position.y += enemyToleranceY;
+    enemyBounds.size.x -= 2 * enemyToleranceX;
+    enemyBounds.size.y -= 2 * enemyToleranceY;
+
+
+    if (playerBounds.findIntersection(enemyBounds)) {
+        m_gameRunning = false; 
+        return; 
+    }
+}
+
 void Game::run() {
     Player* pPlayer = Player::get();
 
     while (m_window.isOpen()) {
-        handleInput();
-        for (size_t i = 0; i < m_pEntities.size(); ++i) {
-            m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+        handleInput(); 
+        if (m_gameRunning == true) {
+            for (size_t i = 0; i < m_pEntities.size(); ++i) {
+                m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+                //skip player to avoid self referring collision detection
+                if (m_pEntities[i] != pPlayer) {
+                    //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
+                    Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i]);
+                    if (pEnemy) {
+                        checkCollision(*pPlayer, *pEnemy);
+                    }
+                }
+            }
         }
         render();
     }

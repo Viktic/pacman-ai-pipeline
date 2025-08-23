@@ -15,7 +15,6 @@ class Player: public Entity {
         //set method allows to initialize the player-singleton once with the spawnPosition
         static void set(sf::Vector2u _spawnPosition);
 
-
         //deleted copy constructor and assignment operator
         Player(const Player&) = delete;
         Player& operator=(const Player&) = delete;
@@ -24,6 +23,7 @@ class Player: public Entity {
         int getHealth();
         void setHealth(int _value);
         void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) override;
+        sf::Vector2f& getMomentum();
 
 
 

@@ -27,6 +27,12 @@ m_momentum({0.0f, 0.0f}),
 Entity(_texturePath, _spawnPosition) {
 }
 
+
+sf::Vector2f& Enemy::getMomentum() {
+    return m_momentum;
+}
+
+
 void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings)  {
     //current enemy position
     sf::Vector2f pos = getSprite().getPosition();
@@ -50,14 +56,10 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
         char left  = _grid[row][col-1];
         char right = _grid[row][col+1];
 
-
         static constexpr sf::Vector2f momentumUp {0.0f,-1.0f};
         static constexpr sf::Vector2f momentumDown {0.0f,1.0f};
         static constexpr sf::Vector2f momentumLeft {-1.0f,0.0f};
         static constexpr sf::Vector2f momentumRight {1.0f,0.0f};
-
-
-
 
         //check if the direction is blocked && not the inverse of the current direction
         if (up != '#' && m_momentum != sf::Vector2f{0.0f, 1.0f}) {
