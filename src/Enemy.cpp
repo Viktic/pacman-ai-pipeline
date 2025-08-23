@@ -42,7 +42,7 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
     float centerY = row * _tileSize + 0.5f * _tileSize;
     //check if current tile is a crossing
     float epsilon = m_speed;
-    if (_crossings.find({col, row}) != _crossings.end() and std::abs(pos.x - centerX) < epsilon and
+    if (_crossings.find({col, row}) != _crossings.end() && std::abs(pos.x - centerX) < epsilon &&
     std::abs(pos.y - centerY) < epsilon){
         //check all possible grid coordinates
         char up    = _grid[row-1][col];
@@ -59,22 +59,22 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
 
 
 
-        //check if the direction is blocked and not the inverse of the current direction
-        if (up != '#' and m_momentum != sf::Vector2f{0.0f, 1.0f}) {
+        //check if the direction is blocked && not the inverse of the current direction
+        if (up != '#' && m_momentum != sf::Vector2f{0.0f, 1.0f}) {
             directions.push_back(momentumUp);
         }
-        if (down != '#' and m_momentum != sf::Vector2f{0.0f, -1.0f}) {
+        if (down != '#' && m_momentum != sf::Vector2f{0.0f, -1.0f}) {
             directions.push_back(momentumDown);
         }
-        if (left != '#' and m_momentum != sf::Vector2f{1.0f, 0.0f}) {
+        if (left != '#' && m_momentum != sf::Vector2f{1.0f, 0.0f}) {
             directions.push_back(momentumLeft);
         }
-        if (right != '#' and m_momentum != sf::Vector2f{-1.0f, 0.0f}) {
+        if (right != '#' && m_momentum != sf::Vector2f{-1.0f, 0.0f}) {
             directions.push_back(momentumRight);
         }
     }
     //set initial impulse if enemy spawn position is a corridor
-    else if (_crossings.find({col, row}) == _crossings.end() and m_momentum == sf::Vector2f{0.0f, 0.0f}) {
+    else if (_crossings.find({col, row}) == _crossings.end() && m_momentum == sf::Vector2f{0.0f, 0.0f}) {
         //check if one direction is blocked (possible directions can only be orthogonal)
         char up = _grid[row-1][col];
         if (up == '#') {

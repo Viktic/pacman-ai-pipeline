@@ -36,7 +36,7 @@ m_tileSize(80){
 
 
 /*
-  factory method to automatically create instances of the correct child-class and add them to
+  factory method to automatically create instances of the correct child-class &&     add them to
   the base class array in the Game class via polymorphism
 */
 void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
@@ -142,7 +142,7 @@ void Game::initialize() {
                 case 'E': {
                     unsigned ex = j*m_tileSize + 0.5*m_tileSize;
                     unsigned ey = i*m_tileSize + 0.5*m_tileSize;
-                    addEnemy("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", {ex, ey});
+                    addEnemy("sprites/HannesSprite.png", {ex, ey});
                     break;
                 }
                 case '#': {

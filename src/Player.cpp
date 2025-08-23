@@ -20,7 +20,7 @@ m_buffer({0.0f, 0.0f}){
 
 void Player::set(sf::Vector2u _spawnPosition) {
     if (player == nullptr) {
-        player = new Player("/Users/viktorbrandmaier/Desktop/Studium Programmieren/OOP_Game/src/sprites/HannesSprite.png", _spawnPosition);
+        player = new Player("sprites/HannesSprite.png", _spawnPosition);
     }
 }
 
