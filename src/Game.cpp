@@ -16,6 +16,7 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
 m_borderX(_windowSizeX),
 m_borderY(_windowSizeY),
 m_gameRunning(true),
+m_gameInitialized(false),
 //every string represents a row in the grid
 m_grid(
 {
