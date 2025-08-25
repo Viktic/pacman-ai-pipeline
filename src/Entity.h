@@ -29,8 +29,6 @@ private:
     sf::Sprite m_sprite;
     float m_positionX;
     float m_positionY;
-
-
 };
 
 

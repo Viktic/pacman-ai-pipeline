@@ -22,6 +22,11 @@ void Player::set(sf::Vector2u _spawnPosition) {
     if (player == nullptr) {
         player = new Player("sprites/HannesSprite.png", _spawnPosition);
     }
+    else {
+        float posX = _spawnPosition.x; 
+        float posY = _spawnPosition.y;
+        player->getSprite().setPosition({posX, posY});
+    }
 }
 
 
@@ -33,6 +38,11 @@ Player* Player::get() {
 void Player::setHealth(int _value) {
     m_health = _value;
 }
+
+void Player::resetMomentum() {
+    m_momentum = { 0.0f, 0.0f };
+}
+
 
 int Player::getHealth() {
     return m_health;

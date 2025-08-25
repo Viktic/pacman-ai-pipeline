@@ -112,9 +112,28 @@ bool Game::validCrossing(int _pX, int _pY) {
     return true;
 }
 
+void Game::clearGame() {
+    for (size_t i = 0; i < m_pEntities.size(); ++i) {
+        Entity* curr = m_pEntities[i];
+        if (curr != Player::get()) {
+            delete curr;
+        }
+    }
+    size_t borderCount = m_pBorders.size();
+    for (size_t i = 0; i < borderCount; ++i) {
+        sf::RectangleShape* curr = m_pBorders[i];
+        delete curr;
+    }
+}
+
+
 
 
 void Game::initialize() {
+
+    clearGame(); 
+    m_pEntities.clear(); 
+    m_pBorders.clear();  
 
     //loop through the grid array
     for (int i = 0; i < m_grid.size(); ++i) {
@@ -226,42 +245,63 @@ void Game::checkCollision(Player& _player, Enemy& _enemy) {
 
     if (playerBounds.findIntersection(enemyBounds)) {
         m_gameRunning = false; 
+        _player.resetMomentum();
         return; 
     }
 }
 
 void Game::run() {
-    Player* pPlayer = Player::get();
 
-    while (m_window.isOpen()) {
-        handleInput(); 
-        if (m_gameRunning == true) {
-            for (size_t i = 0; i < m_pEntities.size(); ++i) {
-                m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
-                //skip player to avoid self referring collision detection
-                if (m_pEntities[i] != pPlayer) {
-                    //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
-                    Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i]);
-                    if (pEnemy) {
-                        checkCollision(*pPlayer, *pEnemy);
+    while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game) 
+
+        if (m_gameRunning) {
+            initialize();
+            Player* pPlayer = Player::get(); 
+            while (m_gameRunning == true) { //inner game loop (handles the current game logic) 
+                handleInput();
+                for (size_t i = 0; i < m_pEntities.size(); ++i) {
+                    m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+                    //skip player to avoid self referring collision detection
+                    if (m_pEntities[i] != pPlayer) {
+                        //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
+                        Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i]);
+                        if (pEnemy) {
+                            checkCollision(*pPlayer, *pEnemy);
+                        }
+                    }
+                }
+                render();
+            }
+        }
+        else {
+            while (!m_gameRunning) { //if GameOver wait for player input to restart the game or close the window
+                while (auto eventOpt = m_window.pollEvent()) {
+                    if (eventOpt->is<sf::Event::Closed>()) {
+                        m_window.close(); 
+                    }
+                    else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
+                        if (keyEvent->code == sf::Keyboard::Key::Enter) {
+                            m_gameRunning = true;
+                        }
                     }
                 }
             }
         }
-        render();
     }
 }
 
 void Game::handleInput() {
     Player* pPlayer = Player::get();
 
-    while (auto eventOpt = m_window.pollEvent()) { // eventOpt ist std::optional<sf::Event>
+    while (auto eventOpt = m_window.pollEvent()) { // eventOpt is std::optional<sf::Event>
         if (eventOpt->is<sf::Event::Closed>()) {
             m_window.close();
+
         }
+
         else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
-            pPlayer->handleInput(keyEvent->code); // keyEvent->code ist sf::Keyboard::Key
-        }
+            pPlayer->handleInput(keyEvent->code); // keyEvent->code is sf::Keyboard::Key
+        } 
     }
 }
 const std::vector<std::string>& Game::getGrid() const {
@@ -276,19 +316,15 @@ float Game::getTileSize() {
     return m_tileSize;
 }
 
-Game::~Game() {
+bool Game::getState() {
+    return m_gameRunning;
+}
 
-    for (size_t i = 0; i < m_pEntities.size(); ++i) {
-        Entity* curr = m_pEntities[i];
-        if (curr != Player::get()) {
-            delete curr;
-        }
-    }
-    size_t borderCount = m_pBorders.size();
-    for (size_t i = 0; i < borderCount; ++i) {
-        sf::RectangleShape* curr = m_pBorders[i];
-        delete curr;
-    }
+
+Game::~Game() {
+    clearGame();
+    m_pEntities.clear();
+    m_pBorders.clear();
 }
 
 

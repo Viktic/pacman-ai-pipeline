@@ -28,6 +28,8 @@ public:
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     float getTileSize();
     void checkCollision(Player& _player, Enemy& _enemy);
+    bool getState();
+    void clearGame(); 
 
     const std::vector<std::string>& getGrid() const;
     sf::RenderWindow& getWindow();
