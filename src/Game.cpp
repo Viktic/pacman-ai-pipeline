@@ -15,6 +15,7 @@
 Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title):
 m_borderX(_windowSizeX),
 m_borderY(_windowSizeY),
+m_gameRunning(true),
 //every string represents a row in the grid
 m_grid(
 {
@@ -182,7 +183,6 @@ void Game::initialize() {
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
-    m_gameRunning = true; 
 }
 
 void Game::render() {
@@ -252,12 +252,15 @@ void Game::checkCollision(Player& _player, Enemy& _enemy) {
 
 void Game::run() {
 
-    while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game) 
+    while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game)
 
         if (m_gameRunning) {
             initialize();
-            Player* pPlayer = Player::get(); 
-            while (m_gameRunning == true) { //inner game loop (handles the current game logic) 
+            Player* pPlayer = Player::get();
+
+
+
+            while (m_gameRunning == true) { //inner game loop (handles the current game logic)
                 handleInput();
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
@@ -277,7 +280,7 @@ void Game::run() {
             while (!m_gameRunning) { //if GameOver wait for player input to restart the game or close the window
                 while (auto eventOpt = m_window.pollEvent()) {
                     if (eventOpt->is<sf::Event::Closed>()) {
-                        m_window.close(); 
+                        m_window.close();
                     }
                     else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
                         if (keyEvent->code == sf::Keyboard::Key::Enter) {
