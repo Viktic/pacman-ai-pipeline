@@ -246,21 +246,22 @@ void Game::checkCollision(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
         m_gameRunning = false; 
         _player.resetMomentum();
-        return; 
     }
 }
 
 void Game::run() {
 
     while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game)
+        if (!m_gameInitialized) {
+            initialize();
+            m_gameInitialized = true;
+        }
+
 
         if (m_gameRunning) {
-            initialize();
             Player* pPlayer = Player::get();
 
-
-
-            while (m_gameRunning == true) { //inner game loop (handles the current game logic)
+            while (m_gameRunning) { //inner game loop (handles the current game logic)
                 handleInput();
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
@@ -277,7 +278,7 @@ void Game::run() {
             }
         }
         else {
-            while (!m_gameRunning) { //if GameOver wait for player input to restart the game or close the window
+            while (!m_gameRunning && m_window.isOpen()) { //if GameOver wait for player input to restart the game or close the window
                 while (auto eventOpt = m_window.pollEvent()) {
                     if (eventOpt->is<sf::Event::Closed>()) {
                         m_window.close();
@@ -285,6 +286,7 @@ void Game::run() {
                     else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
                         if (keyEvent->code == sf::Keyboard::Key::Enter) {
                             m_gameRunning = true;
+                            m_gameInitialized = false;
                         }
                     }
                 }
