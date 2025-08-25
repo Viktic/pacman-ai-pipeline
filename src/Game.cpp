@@ -37,12 +37,6 @@ m_tileSize(80){
     m_window.setFramerateLimit(144);
 }
 
-
-
-/*
-  factory method to automatically create instances of the correct child-class &&     add them to
-  the base class array in the Game class via polymorphism
-*/
 void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
     Entity* pEntity = new Enemy(_filePath, _spawnPosition);
     pEntity->getSprite().setColor(sf::Color::Red);
@@ -66,10 +60,10 @@ bool Game::validCrossing(int _pX, int _pY) {
     }
     //set directions for surrounding tiles
     std::vector<std::pair<int, int>> directions = {
-        {0, -1}, //top
-        {0, 1},  //bottom
-        {-1, 0}, //left
-        {1,0}   //right
+        {0, -1},
+        {0, 1},  
+        {-1, 0}, 
+        {1,0}   
     };
     //find valid index of neighbouring tiles
     std::vector<std::pair<int, int>> neighbours = {};
@@ -129,8 +123,6 @@ void Game::clearGame() {
 }
 
 
-
-
 void Game::initialize() {
 
     clearGame(); 
@@ -179,6 +171,7 @@ void Game::initialize() {
                 }
             }
         }
+        m_gameInitialized = true;
     }
 
     //insert the player into the array
@@ -255,7 +248,6 @@ void Game::run() {
     while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game)
         if (!m_gameInitialized) {
             initialize();
-            m_gameInitialized = true;
         }
 
 
