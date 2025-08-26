@@ -6,7 +6,7 @@
 
 #include "tool.h"
 #include <SFML/Graphics/Sprite.hpp>
-#include "SFML/Graphics/Texture.hpp"
+#include <SFML/Graphics/Texture.hpp>
 #include <string>
 #include <unordered_set>
 
@@ -14,7 +14,7 @@
 class Entity {
 
 public:
-    Entity(const std::string& _filePath, sf::Vector2u _spawnPosition);
+    Entity(const std::string& _filePath, sf::Vector2u& _spawnPosition);
     virtual ~Entity();
 
     sf::Sprite& getSprite();

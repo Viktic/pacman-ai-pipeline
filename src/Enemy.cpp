@@ -61,7 +61,7 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
         static constexpr sf::Vector2f momentumLeft {-1.0f,0.0f};
         static constexpr sf::Vector2f momentumRight {1.0f,0.0f};
 
-        //check if the direction is blocked && not the inverse of the current direction
+        //check if the direction is free && not the inverse of the current direction
         if (up != '#' && m_momentum != sf::Vector2f{0.0f, 1.0f}) {
             directions.push_back(momentumUp);
         }
@@ -96,7 +96,7 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
 
     sf::Vector2f newPos = {
         pos.x + m_momentum.x * m_speed,
-        pos.y + m_momentum.y * m_speed,
+        pos.y + m_momentum.y * m_speed
     };
 
 

@@ -5,12 +5,12 @@
 #include <iostream>
 #include <SFML/Graphics/Sprite.hpp>
 #include "Game.h"
-#include "SFML/Graphics/Texture.hpp"
+#include <SFML/Graphics/Texture.hpp>
 
 unsigned Entity::m_entityCount = 0;
 
 
-Entity::Entity(const std::string& _filePath, sf::Vector2u _spawnPosition):
+Entity::Entity(const std::string& _filePath, sf::Vector2u& _spawnPosition):
 // in SMFL3 sprite needs to be initialized in the initializer list
     m_texture(_filePath),
     m_sprite(m_texture),

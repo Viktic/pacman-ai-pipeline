@@ -30,7 +30,8 @@ add_executable(main
     src/Game.h
     src/EntityType.h
     src/tool.h
-)
+    src/Pellet.cpp
+    src/Pellet.h)
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
