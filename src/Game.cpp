@@ -6,6 +6,7 @@
 #include "Entity.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Pellet.h"
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
@@ -22,14 +23,14 @@ m_grid(
 {
     "################",
     "#......##.E....#",
-    "#.####.##.####.#",
+    "#.####.##.####.#", 
     "#..............#",
     "#.##.#.##.#.##.#",
     "#....#.P..#....#",
-    "#.##.#.##.#.##.#",
+    "#.##.#.##.#.##.#", 
     "#..............#",
     "#.####.##.####.#",
-    "#E.....##.....E#",
+    "#E.....##.....E#", 
     "################"
 }),
 m_tileSize(80){
@@ -50,6 +51,10 @@ void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _co
     rect->setOutlineColor(_color);
     rect->setOutlineThickness(5.f);
     m_pBorders.push_back(rect);
+}
+
+void Game::addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition) {
+    m_pPellets.emplace_back(std::make_unique<Pellet>(_filePath, _spawnPosition));
 }
 
 
@@ -120,14 +125,17 @@ void Game::clearGame() {
         sf::RectangleShape* curr = m_pBorders[i];
         delete curr;
     }
+    m_pEntities.clear();
+    m_pBorders.clear();
+    m_pPellets.clear();
 }
+
 
 
 void Game::initialize() {
 
     clearGame(); 
-    m_pEntities.clear(); 
-    m_pBorders.clear();  
+
 
     //loop through the grid array
     for (int i = 0; i < m_grid.size(); ++i) {
@@ -145,43 +153,57 @@ void Game::initialize() {
                 addBorder({pX, pY}, m_tileSize, sf::Color::Red);
             }
             */
-
+            
+            //screen position relative to grid-position
+            float px = j * m_tileSize + 0.5 * m_tileSize;
+            float py = i * m_tileSize + 0.5 * m_tileSize;
             //initialize game map
+            
+
+            
             switch (curr) {
                 case 'P': {
-                    unsigned px = j*m_tileSize + 0.5*m_tileSize;
-                    unsigned py = i*m_tileSize + 0.5*m_tileSize;
-                    Player::set({px, py});
+
+                    Player::set({unsigned(px), unsigned(py)});
                     break;
                 }
                 case 'E': {
-                    unsigned ex = j*m_tileSize + 0.5*m_tileSize;
-                    unsigned ey = i*m_tileSize + 0.5*m_tileSize;
-                    addEnemy("sprites/HannesSprite.png", {ex, ey});
+                    addPellet("sprites/PelletSprite.png", { px, py });
+                    addEnemy("sprites/HannesSprite.png", {unsigned(px), unsigned(py)});
                     break;
                 }
                 case '#': {
-                    float bx = j*m_tileSize + 0.5*m_tileSize;
-                    float by = i*m_tileSize + 0.5*m_tileSize;
-                    addBorder({bx, by}, m_tileSize, sf::Color::Blue);
+
+                    addBorder({px,py}, m_tileSize, sf::Color::Blue);
                     break;
                 }
                 case '.': {
+                    addPellet("sprites/PelletSprite.png", {px, py});
                     break;
                 }
             }
         }
         m_gameInitialized = true;
+   
     }
-
     //insert the player into the array
     Entity* pPlayer = Player::get();
     m_pEntities.push_back(pPlayer);
+
 }
+
 
 void Game::render() {
 
     m_window.clear();
+
+    size_t pelletCount = m_pPellets.size();
+    //render pellet-objects only when pickedUpState == false
+    for (size_t i = 0; i < pelletCount; ++i) {
+        if (m_pPellets[i]->getPickedUpState() == false) {
+            m_window.draw(m_pPellets[i]->getSprite());
+        }
+    }
 
     //render border-objects
     size_t borderCount = m_pBorders.size();
@@ -190,6 +212,7 @@ void Game::render() {
         sf::RectangleShape* curr = m_pBorders[i];
         m_window.draw(*curr);
     }
+
     //render entity-objects
     size_t entityCount = Entity::getEntityCount();
 
@@ -197,6 +220,7 @@ void Game::render() {
         Entity* curr = m_pEntities[i];
         m_window.draw(curr->getSprite());
     }
+
     m_window.display();
 }
 

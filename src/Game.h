@@ -5,11 +5,12 @@
 #include "EntityType.h"
 #include "tool.h"
 #include <vector>
+#include <memory>
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <unordered_set>
 
-
+class Pellet;
 class Entity;
 class Player;
 class Enemy;
@@ -26,6 +27,7 @@ public:
     void handleInput();
     void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
+    void addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition); 
     float getTileSize();
     void checkCollision(Player& _player, Enemy& _enemy);
     bool getState();
@@ -38,7 +40,7 @@ public:
 private:
     //private helper method to find crossings in the grid
     bool validCrossing(int _pX, int _pY);
-
+    std::vector<std::unique_ptr<Pellet>> m_pPellets; 
     std::vector<std::string> m_grid;
     std::vector<sf::RectangleShape*> m_pBorders;
     std::vector<Entity*> m_pEntities;
