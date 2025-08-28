@@ -29,7 +29,8 @@ public:
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     void addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition); 
     float getTileSize();
-    void checkCollision(Player& _player, Enemy& _enemy);
+    void checkCollisionEnemy(Player& _player, Enemy& _enemy);
+    void checkCollisionPellet(Player& _player, Pellet& _pellet);
     bool getState();
     void clearGame(); 
 
@@ -49,7 +50,7 @@ private:
     //hash set which contains the grid coordinates of all valid crossings
     std::unordered_set<sf::Vector2i, tool::sfVector2iHash> m_crossings;
 
-
+    int m_score; 
     float m_tileSize;
     unsigned m_borderX;
     unsigned m_borderY;

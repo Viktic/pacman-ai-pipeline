@@ -14,7 +14,7 @@ public:
 	const sf::Texture& getTexture();
 	const sf::Sprite& getSprite(); 
 	bool getPickedUpState();
-
+	void setPickedUpState(bool _state); 
 
 
 private:

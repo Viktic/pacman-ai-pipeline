@@ -27,3 +27,7 @@ const sf::Texture& Pellet::getTexture() {
 bool Pellet::getPickedUpState() {
 	return m_pickedUp; 
 }
+
+void Pellet::setPickedUpState(bool _state) {
+	m_pickedUp = _state;
+}

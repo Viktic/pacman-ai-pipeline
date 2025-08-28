@@ -13,11 +13,12 @@
 
 
 
-Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title):
-m_borderX(_windowSizeX),
-m_borderY(_windowSizeY),
-m_gameRunning(true),
-m_gameInitialized(false),
+Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title) :
+    m_borderX(_windowSizeX),
+    m_borderY(_windowSizeY),
+    m_gameRunning(true),
+    m_gameInitialized(false),
+    m_score(0),
 //every string represents a row in the grid
 m_grid(
 {
@@ -224,7 +225,7 @@ void Game::render() {
 
 
 //check collision between player and enemies 
-void Game::checkCollision(Player& _player, Enemy& _enemy) {
+void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
 
     sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
     sf::FloatRect enemyBounds = _enemy.getSprite().getGlobalBounds();
@@ -244,8 +245,8 @@ void Game::checkCollision(Player& _player, Enemy& _enemy) {
     sf::Vector2u enemySpriteSize = _enemy.getSprite().getTexture().getSize();
     sf::Vector2f enemySpriteScale = _enemy.getSprite().getScale();
 
-    float enemyToleranceX = enemyBounds.size.x * 0.15f; 
-    float enemyToleranceY = enemyBounds.size.y * 0.15f; 
+    float enemyToleranceX = enemyBounds.size.x * 0.30f; 
+    float enemyToleranceY = enemyBounds.size.y * 0.30f; 
 
 
     playerBounds.position.x += playerToleranceX;
@@ -262,8 +263,37 @@ void Game::checkCollision(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
         m_gameRunning = false; 
         _player.resetMomentum();
+
     }
 }
+
+void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
+
+    sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
+    sf::FloatRect pelletBounds = _pellet.getSprite().getGlobalBounds();
+
+    //hitbox tolerance relative to player sprite size
+
+    sf::Vector2u playerSpriteSize = _player.getSprite().getTexture().getSize();
+    sf::Vector2f playerSpriteScale = _player.getSprite().getScale();
+
+    float playerToleranceX = playerBounds.size.x * 0.15f;
+    float playerToleranceY = playerBounds.size.y * 0.15f;
+
+    //pellet tolerance //WORK IN PROGRESS
+
+    playerBounds.position.x += playerToleranceX;
+    playerBounds.position.y += playerToleranceY;
+    playerBounds.size.x -= 2 * playerToleranceX;
+    playerBounds.size.y -= 2 * playerToleranceY;
+
+    if (playerBounds.findIntersection(pelletBounds)) {
+        _pellet.setPickedUpState(true);
+        m_score++; 
+    }
+}
+
+
 
 void Game::run() {
 
@@ -271,8 +301,6 @@ void Game::run() {
         if (!m_gameInitialized) {
             initialize();
         }
-
-
         if (m_gameRunning) {
             Player* pPlayer = Player::get();
 
@@ -285,8 +313,13 @@ void Game::run() {
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
                         Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i]);
                         if (pEnemy) {
-                            checkCollision(*pPlayer, *pEnemy);
+                            checkCollisionEnemy(*pPlayer, *pEnemy);
                         }
+                    }
+                }
+                for (size_t i = 0; i < m_pPellets.size(); ++i) {
+                    if (m_pPellets[i]->getPickedUpState() == false) {
+                        checkCollisionPellet(*pPlayer, *(m_pPellets[i].get()));
                     }
                 }
                 render();
@@ -302,6 +335,8 @@ void Game::run() {
                         if (keyEvent->code == sf::Keyboard::Key::Enter) {
                             m_gameRunning = true;
                             m_gameInitialized = false;
+                            std::cout << m_score << std::endl; 
+                            m_score = 0;
                         }
                     }
                 }
