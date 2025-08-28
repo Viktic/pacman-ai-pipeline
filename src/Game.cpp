@@ -158,9 +158,7 @@ void Game::initialize() {
             float px = j * m_tileSize + 0.5 * m_tileSize;
             float py = i * m_tileSize + 0.5 * m_tileSize;
             //initialize game map
-            
 
-            
             switch (curr) {
                 case 'P': {
 
