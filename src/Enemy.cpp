@@ -21,10 +21,11 @@ sf::Vector2u Enemy::setStartingPosition(sf::Vector2u _windowSize) {
 */
 
 
-Enemy::Enemy(const std::string& _texturePath, sf::Vector2u _spawnPosition):
+Enemy::Enemy(const std::string& _texturePath, sf::Vector2f _spawnPosition):
 m_speed(2.0f),
 m_momentum({0.0f, 0.0f}),
 Entity(_texturePath, _spawnPosition) {
+    getSprite().setColor(sf::Color::Red); 
 }
 
 

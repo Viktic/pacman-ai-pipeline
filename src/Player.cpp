@@ -8,31 +8,15 @@
 #include <iostream>
 #include <cmath>
 
-Player* Player::player = nullptr;
+Player* Player::instance = nullptr; 
 
-Player::Player(const std::string &_textureFilePath, sf::Vector2u _spawnPosition):
+Player::Player(const std::string &_textureFilePath, sf::Vector2f _spawnPosition):
 Entity(_textureFilePath, _spawnPosition),
 m_health(100),
 m_speed(2.0f),
 m_momentum({0.0f,0.0f}),
 m_buffer({0.0f, 0.0f}){
-
-}
-
-void Player::set(sf::Vector2u _spawnPosition) {
-    if (player == nullptr) {
-        player = new Player("sprites/HannesSprite.png", _spawnPosition);
-    }
-    else {
-        float posX = _spawnPosition.x; 
-        float posY = _spawnPosition.y;
-        player->getSprite().setPosition({posX, posY});
-    }
-}
-
-
-Player* Player::get() {
-    return player;
+    getSprite().setPosition(_spawnPosition); 
 }
 
 

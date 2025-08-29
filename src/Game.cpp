@@ -39,10 +39,8 @@ m_tileSize(80){
     m_window.setFramerateLimit(144);
 }
 
-void Game::addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition) {
-    Entity* pEntity = new Enemy(_filePath, _spawnPosition);
-    pEntity->getSprite().setColor(sf::Color::Red);
-    m_pEntities.push_back(pEntity);
+void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
+    m_pEntities.emplace_back(std::make_unique<Enemy>(_filePath, _spawnPosition));
 }
 
 void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color) {
@@ -115,12 +113,7 @@ bool Game::validCrossing(int _pX, int _pY) {
 }
 
 void Game::clearGame() {
-    for (size_t i = 0; i < m_pEntities.size(); ++i) {
-        Entity* curr = m_pEntities[i];
-        if (curr != Player::get()) {
-            delete curr;
-        }
-    }
+ 
     size_t borderCount = m_pBorders.size();
     for (size_t i = 0; i < borderCount; ++i) {
         sf::RectangleShape* curr = m_pBorders[i];
@@ -160,15 +153,18 @@ void Game::initialize() {
             float py = i * m_tileSize + 0.5 * m_tileSize;
             //initialize game map
 
+
             switch (curr) {
                 case 'P': {
-
-                    Player::set({unsigned(px), unsigned(py)});
+                    auto player = std::make_unique<Player>("sprites/HannesSprite.png", sf::Vector2f(px, py));
+                    //insert the player into the array
+                    Player::instance = player.get();
+                    m_pEntities.push_back(std::move(player));
                     break;
                 }
                 case 'E': {
                     addPellet("sprites/PelletSprite.png", { px, py });
-                    addEnemy("sprites/HannesSprite.png", {unsigned(px), unsigned(py)});
+                    addEnemy("sprites/HannesSprite.png", {px, py});
                     break;
                 }
                 case '#': {
@@ -185,9 +181,6 @@ void Game::initialize() {
         m_gameInitialized = true;
    
     }
-    //insert the player into the array
-    Entity* pPlayer = Player::get();
-    m_pEntities.push_back(pPlayer);
 
 }
 
@@ -216,8 +209,7 @@ void Game::render() {
     size_t entityCount = Entity::getEntityCount();
 
     for (size_t i = 0; i < entityCount; ++i) {
-        Entity* curr = m_pEntities[i];
-        m_window.draw(curr->getSprite());
+        m_window.draw(m_pEntities[i]->getSprite());
     }
 
     m_window.display();
@@ -312,16 +304,16 @@ void Game::run() {
             initialize();
         }
         if (m_gameRunning) {
-            Player* pPlayer = Player::get();
+            Player* pPlayer = Player::instance; 
 
             while (m_gameRunning) { //inner game loop (handles the current game logic)
                 handleInput();
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
                     //skip player to avoid self referring collision detection
-                    if (m_pEntities[i] != pPlayer) {
+                    if (m_pEntities[i].get() != pPlayer) {
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
-                        Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i]);
+                        Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i].get());
                         if (pEnemy) {
                             checkCollisionEnemy(*pPlayer, *pEnemy);
                         }
@@ -329,7 +321,7 @@ void Game::run() {
                 }
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
                     if (m_pPellets[i]->getPickedUpState() == false) {
-                        checkCollisionPellet(*pPlayer, *(m_pPellets[i].get()));
+                        checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
                     }
                 }
                 render();
@@ -356,7 +348,7 @@ void Game::run() {
 }
 
 void Game::handleInput() {
-    Player* pPlayer = Player::get();
+    Player* pPlayer = Player::instance;
 
     while (auto eventOpt = m_window.pollEvent()) { // eventOpt is std::optional<sf::Event>
         if (eventOpt->is<sf::Event::Closed>()) {

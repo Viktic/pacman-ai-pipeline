@@ -14,7 +14,7 @@
 class Entity {
 
 public:
-    Entity(const std::string& _filePath, sf::Vector2u& _spawnPosition);
+    Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition);
     virtual ~Entity();
 
     sf::Sprite& getSprite();

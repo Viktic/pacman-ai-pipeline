@@ -11,13 +11,10 @@
 class Player: public Entity {
 
     public:
-        static Player* get();
+        static Player* instance;
         //set method allows to initialize the player-singleton once with the spawnPosition
-        static void set(sf::Vector2u _spawnPosition);
-
-        //deleted copy constructor and assignment operator
-        Player(const Player&) = delete;
-        Player& operator=(const Player&) = delete;
+        Player(const std::string& _texturePath, sf::Vector2f _spawnPosition); 
+  
 
         void handleInput(sf::Keyboard::Key _key);
         int getHealth();
@@ -29,8 +26,6 @@ class Player: public Entity {
 
 
     private:
-        static Player* player;
-        explicit Player(const std::string& _textureFilePath, sf::Vector2u _spawnPosition);
 
         //Momentum Variable to keep track of the players movement direction
         sf::Vector2f m_momentum;

@@ -25,7 +25,7 @@ public:
     void run();
     void render();
     void handleInput();
-    void addEnemy(const std::string& _filePath, sf::Vector2u _spawnPosition);
+    void addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition);
     void addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color);
     void addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition); 
     float getTileSize();
@@ -45,7 +45,7 @@ private:
     std::vector<std::unique_ptr<Pellet>> m_pPellets; 
     std::vector<std::string> m_grid;
     std::vector<sf::RectangleShape*> m_pBorders;
-    std::vector<Entity*> m_pEntities;
+    std::vector<std::unique_ptr<Entity>> m_pEntities; 
     sf::RenderWindow m_window;
 
     //hash set which contains the grid coordinates of all valid crossings
