@@ -267,6 +267,13 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
     }
 }
 
+//reset the pickedUpState of all pellets to false
+void Game::resetPellets(std::vector<std::unique_ptr<Pellet>>& _pellets) {
+    for (size_t i = 0; i < _pellets.size(); ++i) {
+        _pellets[i]->setPickedUpState(false);
+    }
+}
+
 void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
 
     sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
@@ -290,9 +297,12 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
     if (playerBounds.findIntersection(pelletBounds)) {
         _pellet.setPickedUpState(true);
         m_score++; 
+        //check if all pellets on the screen are cleared 
+        if (m_score % m_pPellets.size() == 0 && m_score > 0) {
+            resetPellets(m_pPellets); 
+        }
     }
 }
-
 
 
 void Game::run() {

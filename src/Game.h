@@ -30,6 +30,7 @@ public:
     void addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition); 
     float getTileSize();
     void checkCollisionEnemy(Player& _player, Enemy& _enemy);
+    void resetPellets(std::vector<std::unique_ptr<Pellet>>& _pellets);
     void checkCollisionPellet(Player& _player, Pellet& _pellet);
     bool getState();
     void clearGame(); 
