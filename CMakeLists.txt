@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
+#SFML
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 3.0.1
@@ -17,6 +18,18 @@ FetchContent_Declare(SFML
     SYSTEM
 )
 FetchContent_MakeAvailable(SFML)
+
+#nlohmann/json for data-storage
+FetchContent_Declare(nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.12.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+
 
 add_executable(main
     src/main.cpp
@@ -28,13 +41,16 @@ add_executable(main
     src/Enemy.h
     src/Game.cpp
     src/Game.h
-    src/EntityType.h
+    
     src/tool.h
     src/Pellet.cpp
     src/Pellet.h)
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
+target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
 
 #copy assets into runtime directory
 file(COPY ${CMAKE_SOURCE_DIR}/src/sprites DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+#copy config into runtime directory
+file(COPY ${CMAKE_SOURCE_DIR}/config/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config)
