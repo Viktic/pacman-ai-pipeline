@@ -29,7 +29,6 @@ int main()
 
     std::string rawDataDirManifest = j["rawDataDirManifest"];
 
-
     //read the raw data manifest from the back to retreive latest entry
     std::fstream manifest(rawDataDirManifest);
 
@@ -37,8 +36,6 @@ int main()
         std::cerr << "failed to open file: data/raw/manifest.jsonl" << std::endl;
         return 1;
     }
-
-   
 
     std::string line;
     std::string lastline;
@@ -49,7 +46,6 @@ int main()
             lastline = line;
     }
 
-    
     if (lastline.empty()) {
         std::cerr << "error: file is empty" << std::endl; 
         return 1; 
@@ -61,6 +57,16 @@ int main()
 
     //DEBUGGING ONLY
     std::cout << "last session_id: " << lastSessionId << std::endl;
+
+
+
+
+
+
+
+
+
+
 
 
 

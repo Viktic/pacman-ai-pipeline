@@ -14,21 +14,17 @@
 class Entity {
 
 public:
-    Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition);
-    virtual ~Entity();
 
+    Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition);
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
-    static size_t getEntityCount();
     virtual void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) = 0;
 
 
 private:
-    static unsigned m_entityCount;
+
     sf::Texture m_texture;
     sf::Sprite m_sprite;
-    float m_positionX;
-    float m_positionY;
 };
 
 

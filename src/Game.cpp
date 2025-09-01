@@ -11,16 +11,16 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 
-
-
+//game constructor
 Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title) :
     m_borderX(_windowSizeX),
     m_borderY(_windowSizeY),
     m_gameRunning(true),
     m_gameInitialized(false),
     m_score(0),
-//every string represents a row in the grid
-m_grid(
+
+    //ASCII-grid-map 
+    m_grid(
 {
     "################",
     "#......##.E....#",
@@ -39,45 +39,56 @@ m_tileSize(80){
     m_window.setFramerateLimit(144);
 }
 
+//constructs a new enemy with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
     m_pEntities.emplace_back(std::make_unique<Enemy>(_filePath, _spawnPosition));
 }
 
+//constructs a new rectangle object
 void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color) {
     sf::RectangleShape* rect = new sf::RectangleShape({_tileSize, _tileSize});
     rect->setPosition(_spawnPosition);
     rect->setFillColor(sf::Color::Black);
     rect->setOutlineColor(_color);
-    rect->setOutlineThickness(5.f);
+    rect->setOutlineThickness(5.0f);
     m_pBorders.push_back(rect);
 }
 
+//constructs a new pellet with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition) {
     m_pPellets.emplace_back(std::make_unique<Pellet>(_filePath, _spawnPosition));
 }
 
-
+//parses the game-map to find valid crossings
 bool Game::validCrossing(int _pX, int _pY) {
+
     //check if current tile itself is empty
     if (m_grid[_pY][_pX] == '#') {
         return false;
     }
+
     //set directions for surrounding tiles
-    std::vector<std::pair<int, int>> directions = {
+    std::vector<sf::Vector2i> directions = {
         {0, -1},
         {0, 1},  
         {-1, 0}, 
         {1,0}   
     };
-    //find valid index of neighbouring tiles
-    std::vector<std::pair<int, int>> neighbours = {};
-    for (size_t k = 0; k < directions.size(); ++k) {
-        int dx = directions[k].first;
-        int dy = directions[k].second;
 
+    std::vector<sf::Vector2i> neighbours = {};
+
+    //find valid index of neighbouring tiles
+    for (size_t k = 0; k < directions.size(); ++k) {
+
+        //x and y directions
+        int dx = directions[k].x;
+        int dy = directions[k].y;
+
+        //neighbouring tiles in x and y directions
         int nx = _pX + dx;
         int ny = _pY + dy;
 
+        //adds tile coordinates to the neighbours vector if it is a valid crossing
         if (ny >= 0 && ny < m_grid.size() && nx >= 0 && nx < m_grid[0].size()) {
             if (m_grid[ny][nx] != '#') {
                 neighbours.push_back({nx, ny});
@@ -92,17 +103,18 @@ bool Game::validCrossing(int _pX, int _pY) {
 
     //if there are excactly two neighbours -> check if they are orthogonal
     if (neighbours.size() == 2) {
+
         //get both neighbours
-        std::pair<int, int> pair1 = neighbours[0];
-        std::pair<int, int> pair2 = neighbours[1];
+        sf::Vector2i pair1 = neighbours[0];
+        sf::Vector2i pair2 = neighbours[1];
 
         //extract the directions
-        int dx1 = pair1.first - _pX;
-        int dy1 = pair1.second - _pY;
-        int dx2 = pair2.first - _pX;
-        int dy2 = pair2.second - _pY;
+        int dx1 = pair1.x - _pX;
+        int dy1 = pair1.y - _pY;
+        int dx2 = pair2.x - _pX;
+        int dy2 = pair2.y - _pY;
 
-        //check if they are orthogonal
+        //check if directions are orthogonal
         if (dx1 == -dx2 && dy1 == -dy2) {
             return false;
         }
@@ -112,31 +124,35 @@ bool Game::validCrossing(int _pX, int _pY) {
     return true;
 }
 
+//resets all the ownership vectors and deletes allocated object instances
 void Game::clearGame() {
  
+    //delete border instances
     size_t borderCount = m_pBorders.size();
     for (size_t i = 0; i < borderCount; ++i) {
         sf::RectangleShape* curr = m_pBorders[i];
         delete curr;
     }
-    m_pEntities.clear();
+    //clear borders vector
     m_pBorders.clear();
+
+    //clear entities and pellets vector (automatically frees memory controlled by smart pointers) 
+    m_pEntities.clear();
     m_pPellets.clear();
 }
 
-
-
+//intializes the game
 void Game::initialize() {
 
+    //clear game first to avoid memory leaks 
     clearGame(); 
 
-
-    //loop through the grid array
+    //loop through the grid array to initialize game-objects
     for (int i = 0; i < m_grid.size(); ++i) {
         for (int j = 0; j < m_grid[0].size(); ++j) {
-            char curr  = m_grid[i][j];
+            char curr = m_grid[i][j];
             if (validCrossing(j, i)) {
-                m_crossings.insert({j,i});
+                m_crossings.insert({ j,i });
             }
 
             //TESTING ONLY (highlight crossing location in grid via hashing)
@@ -147,50 +163,53 @@ void Game::initialize() {
                 addBorder({pX, pY}, m_tileSize, sf::Color::Red);
             }
             */
-            
+
             //screen position relative to grid-position
             float px = j * m_tileSize + 0.5 * m_tileSize;
             float py = i * m_tileSize + 0.5 * m_tileSize;
+
             //initialize game map
-
-
             switch (curr) {
-                case 'P': {
-                    auto player = std::make_unique<Player>("sprites/HannesSprite.png", sf::Vector2f(px, py));
-                    //insert the player into the array
-                    Player::instance = player.get();
-                    m_pEntities.push_back(std::move(player));
-                    break;
-                }
-                case 'E': {
-                    addPellet("sprites/PelletSprite.png", { px, py });
-                    addEnemy("sprites/HannesSprite.png", {px, py});
-                    break;
-                }
-                case '#': {
 
-                    addBorder({px,py}, m_tileSize, sf::Color::Blue);
-                    break;
-                }
-                case '.': {
-                    addPellet("sprites/PelletSprite.png", {px, py});
-                    break;
-                }
+                //initialize player instance
+            case 'P': {
+                auto player = std::make_unique<Player>("sprites/HannesSprite.png", sf::Vector2f(px, py));
+
+                //insert the player into the m_pEntities vector
+                Player::instance = player.get();
+                m_pEntities.push_back(std::move(player));
+                break;
+            }
+                    //initialize enemy instances + underlying pellet instances
+            case 'E': {
+                addPellet("sprites/PelletSprite.png", { px, py });
+                addEnemy("sprites/HannesSprite.png", { px, py });
+                break;
+            }
+                    //initialize borders
+            case '#': {
+                addBorder({ px,py }, m_tileSize, sf::Color::Blue);
+                break;
+            }
+                    //initialize pellet instances 
+            case '.': {
+                addPellet("sprites/PelletSprite.png", { px, py });
+                break;
+            }
             }
         }
         m_gameInitialized = true;
-   
     }
-
 }
 
-
+//renders game-objects
 void Game::render() {
 
     m_window.clear();
 
-    size_t pelletCount = m_pPellets.size();
     //render pellet-objects only when pickedUpState == false
+    size_t pelletCount = m_pPellets.size();
+
     for (size_t i = 0; i < pelletCount; ++i) {
         if (m_pPellets[i]->getPickedUpState() == false) {
             m_window.draw(m_pPellets[i]->getSprite());
@@ -206,9 +225,7 @@ void Game::render() {
     }
 
     //render entity-objects
-    size_t entityCount = Entity::getEntityCount();
-
-    for (size_t i = 0; i < entityCount; ++i) {
+    for (size_t i = 0; i < m_pEntities.size(); ++i) {
         m_window.draw(m_pEntities[i]->getSprite());
     }
 
@@ -219,73 +236,71 @@ void Game::render() {
 //check collision between player and enemies 
 void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
 
+    //player and enemy bounds
     sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
     sf::FloatRect enemyBounds = _enemy.getSprite().getGlobalBounds();
     
 
     //hitbox tolerance relative to player sprite size
-
     sf::Vector2u playerSpriteSize = _player.getSprite().getTexture().getSize();
     sf::Vector2f playerSpriteScale = _player.getSprite().getScale(); 
-
     float playerToleranceX = playerBounds.size.x * 0.15f; 
     float playerToleranceY = playerBounds.size.y * 0.15f; 
 
 
     //hitbox tolerance relative to enemy sprite size
-
     sf::Vector2u enemySpriteSize = _enemy.getSprite().getTexture().getSize();
     sf::Vector2f enemySpriteScale = _enemy.getSprite().getScale();
-
     float enemyToleranceX = enemyBounds.size.x * 0.30f; 
     float enemyToleranceY = enemyBounds.size.y * 0.30f; 
 
-
+    //update playerBounds with hitbox tolerance
     playerBounds.position.x += playerToleranceX;
     playerBounds.position.y += playerToleranceY;
     playerBounds.size.x -= 2 * playerToleranceX;
     playerBounds.size.y -= 2 * playerToleranceY;
 
+    //update enemyBounds with hitbox tolerance
     enemyBounds.position.x += enemyToleranceX;
     enemyBounds.position.y += enemyToleranceY;
     enemyBounds.size.x -= 2 * enemyToleranceX;
     enemyBounds.size.y -= 2 * enemyToleranceY;
 
-
+    //detect collision between player and enemy
     if (playerBounds.findIntersection(enemyBounds)) {
         m_gameRunning = false; 
         _player.resetMomentum();
-
     }
 }
 
 //reset the pickedUpState of all pellets to false
 void Game::resetPellets(std::vector<std::unique_ptr<Pellet>>& _pellets) {
+
     for (size_t i = 0; i < _pellets.size(); ++i) {
         _pellets[i]->setPickedUpState(false);
     }
 }
 
+//check collision between player and pellet
 void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
 
+    //player and pellet bounds
     sf::FloatRect playerBounds = _player.getSprite().getGlobalBounds();
     sf::FloatRect pelletBounds = _pellet.getSprite().getGlobalBounds();
 
     //hitbox tolerance relative to player sprite size
-
     sf::Vector2u playerSpriteSize = _player.getSprite().getTexture().getSize();
     sf::Vector2f playerSpriteScale = _player.getSprite().getScale();
-
     float playerToleranceX = playerBounds.size.x * 0.15f;
     float playerToleranceY = playerBounds.size.y * 0.15f;
 
-    //pellet tolerance //WORK IN PROGRESS
-
+    //update playerBounds with hitbox tolerance
     playerBounds.position.x += playerToleranceX;
     playerBounds.position.y += playerToleranceY;
     playerBounds.size.x -= 2 * playerToleranceX;
     playerBounds.size.y -= 2 * playerToleranceY;
 
+    //detect collision between player and pellet
     if (playerBounds.findIntersection(pelletBounds)) {
         _pellet.setPickedUpState(true);
         m_score++; 
@@ -296,22 +311,48 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
     }
 }
 
+//handles all inputs
+void Game::handleInput() {
 
+    Player* pPlayer = Player::instance;
+
+    while (auto eventOpt = m_window.pollEvent()) {
+        //close the window 
+        if (eventOpt->is<sf::Event::Closed>()) {
+            m_window.close();
+
+        }
+        //redirect input to player input handler if a key is pressed
+        else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
+            pPlayer->handleInput(keyEvent->code);
+        }
+    }
+}
+
+//runs the game
 void Game::run() {
 
-    while (m_window.isOpen()) { //outer game loop (handles the logic for creating a new game)
+    //outer game loop (handles the logic for creating a new game)
+    while (m_window.isOpen()) { 
         if (!m_gameInitialized) {
             initialize();
         }
         if (m_gameRunning) {
+          
             Player* pPlayer = Player::instance; 
 
-            while (m_gameRunning) { //inner game loop (handles the current game logic)
+            //inner game loop (handles the current game logic)
+            while (m_gameRunning) { 
+                //game input handler
                 handleInput();
+
+                //updates the movement for all entities and checks collision between player and enemies
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+
                     //skip player to avoid self referring collision detection
                     if (m_pEntities[i].get() != pPlayer) {
+                        
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
                         Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i].get());
                         if (pEnemy) {
@@ -319,6 +360,7 @@ void Game::run() {
                         }
                     }
                 }
+                //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
                     if (m_pPellets[i]->getPickedUpState() == false) {
                         checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
@@ -327,12 +369,17 @@ void Game::run() {
                 render();
             }
         }
+
+        //if GameOver wait for player input to restart the game or close the window
         else {
-            while (!m_gameRunning && m_window.isOpen()) { //if GameOver wait for player input to restart the game or close the window
+
+            while (!m_gameRunning && m_window.isOpen()) {
                 while (auto eventOpt = m_window.pollEvent()) {
+                    //close the window
                     if (eventOpt->is<sf::Event::Closed>()) {
                         m_window.close();
                     }
+                    //restart the game if Enter key is pressed
                     else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
                         if (keyEvent->code == sf::Keyboard::Key::Enter) {
                             m_gameRunning = true;
@@ -347,37 +394,29 @@ void Game::run() {
     }
 }
 
-void Game::handleInput() {
-    Player* pPlayer = Player::instance;
 
-    while (auto eventOpt = m_window.pollEvent()) { // eventOpt is std::optional<sf::Event>
-        if (eventOpt->is<sf::Event::Closed>()) {
-            m_window.close();
 
-        }
-
-        else if (auto keyEvent = eventOpt->getIf<sf::Event::KeyPressed>()) {
-            pPlayer->handleInput(keyEvent->code); // keyEvent->code is sf::Keyboard::Key
-        } 
-    }
-}
+//grid-map getter
 const std::vector<std::string>& Game::getGrid() const {
     return m_grid;
 }
 
+//window getter
 sf::RenderWindow& Game::getWindow() {
     return m_window;
 }
 
+//tileSize getter
 float Game::getTileSize() {
     return m_tileSize;
 }
 
+//game-running state getter
 bool Game::getState() {
     return m_gameRunning;
 }
 
-
+//game destructor
 Game::~Game() {
     clearGame();
     m_pEntities.clear();
