@@ -36,20 +36,30 @@ EventLogger::EventLogger() {
 int EventLogger::getSessionId() {
 
 	//open the manifest.jsonl 
-	std::fstream manifest(m_rawDataManifest);
+	std::ifstream manifest(m_rawDataManifest, std::ifstream::binary);
 	if (!manifest.is_open()) {
 		std::cerr << "failed to open file: data/raw/manifest.jsonl" << std::endl;
 	}
 
-	std::string line; 
+	//sets the stream position to the end of the file
+	manifest.seekg(0, std::ios_base::end);
+	int streamPos = manifest.tellg();
+
+	char c; 
 	std::string lastLine; 
 
-	//get the last json object in the manifest (lastLine) - brute-force approach for now
-	while (std::getline(manifest, line)) {
-		if (!line.empty()) {
-			lastLine = line; 
+	//moves the stream position to the last newline character (beginning of the last jsonl line) 
+	for (--streamPos; streamPos >= 0; --streamPos) {
+		manifest.seekg(streamPos);
+		manifest.read(&c, 1); 
+		if (c == '\n') {
+			break; 
 		}
 	}
+
+	//reads the last line (last json object)
+	getline(manifest, lastLine); 
+
 
 	//throw error if manifest is empty
 	if (lastLine.empty()) {
@@ -62,5 +72,7 @@ int EventLogger::getSessionId() {
 
 	//increment the last sessoin_id to get the new session_id
 	int newSessionId = ++lastSessionId;
+
+	manifest.close();
 	return newSessionId; 
 }

@@ -10,14 +10,14 @@
 
 int main()
 {
-
+    //initialize EventLogger
     EventLogger* pEventLogger = new EventLogger();
     std::cout << pEventLogger->getSessionId() << std::endl;
 
     delete pEventLogger; 
 
 
-    //Initialize Game Instance
+    //initialize Game Instance
     Game* pGame = new Game(1600, 1000, "OOP-Game");
 
     pGame->run();
