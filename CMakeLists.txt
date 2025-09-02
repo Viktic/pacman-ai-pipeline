@@ -44,7 +44,7 @@ add_executable(main
     
     src/tool.h
     src/Pellet.cpp
-    src/Pellet.h)
+    src/Pellet.h "src/EventLogger.h" "src/EventLogger.cpp")
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
