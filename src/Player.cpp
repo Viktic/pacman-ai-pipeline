@@ -8,37 +8,31 @@
 #include <iostream>
 #include <cmath>
 
+
 Player* Player::instance = nullptr; 
 
-Player::Player(const std::string &_textureFilePath, sf::Vector2f _spawnPosition):
-Entity(_textureFilePath, _spawnPosition),
-m_health(100),
-m_speed(2.0f),
-m_momentum({0.0f,0.0f}),
-m_buffer({0.0f, 0.0f}){
-    getSprite().setPosition(_spawnPosition); 
+//Player constructor
+Player::Player(const std::string& _textureFilePath, sf::Vector2f _spawnPosition) :
+    Entity(_textureFilePath, _spawnPosition),
+    m_speed(2.0f),
+    m_momentum({ 0.0f,0.0f }),
+    m_buffer({ 0.0f, 0.0f }) {
+    getSprite().setPosition(_spawnPosition);
 }
 
-
-void Player::setHealth(int _value) {
-    m_health = _value;
-}
-
+//resets player momentum
 void Player::resetMomentum() {
     m_momentum = { 0.0f, 0.0f };
 }
 
-
-int Player::getHealth() {
-    return m_health;
-}
-
+//momentum getter
 sf::Vector2f& Player::getMomentum() {
     return m_momentum;
 }
  
-
+//handle the buffered-movement logic 
 void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
+    
     //current player position
     sf::Vector2f pos = getSprite().getPosition();
 
@@ -67,11 +61,14 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
     if (m_momentum.x != 0.0f) { 
         crossingCenter = (lastPos.x <= centerX && pos.x >= centerX) ||
             (lastPos.x >= centerX && pos.x <= centerX);
-    }//check vertical movement
+    }
+    //check vertical movement
     else if (m_momentum.y != 0.0f) { 
         crossingCenter = (lastPos.y <= centerY && pos.y >= centerY) ||
             (lastPos.y >= centerY && pos.y <= centerY);
     }
+
+    //update lastPos
     lastPos = pos;
 
     //tolerance 
@@ -128,19 +125,20 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
             directionChanged = true;
         }
 
-        //when direction changes snap to center
+        //snap to center only if direction changed
         if (directionChanged) {
             getSprite().setPosition({ centerX, centerY });
             pos = { centerX, centerY };
         }
     }
+
     //check if current tile is a corridor and close proximity to center
     else if (distanceToCenter <= epsilon || crossingCenter) {
         
         //keep track of direction change (only need to snap to center once)
         bool directionChanged = false;
 
-        // Check possible directions (with bounds checking)
+        //check possible directions (with bounds checking)
         bool upBlocked = (row <= 0) || (_grid[row - 1][col] == '#');
         bool downBlocked = (row >= static_cast<int>(_grid.size() - 1)) || (_grid[row + 1][col] == '#');
         bool leftBlocked = (col <= 0) || (_grid[row][col - 1] == '#');
@@ -177,7 +175,7 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
             directionChanged = true;
         }
 
-        //when direction changed snap to center
+        //snap to center if direction changed
         if (directionChanged) {
             if (m_momentum.x != 0.0f) {
                 getSprite().setPosition({ centerX, pos.y });
@@ -194,7 +192,6 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
     if (m_momentum == m_buffer) {
         m_buffer = sf::Vector2f{ 0.0f, 0.0f };
     }
-
 
     //calculate new position
     sf::Vector2f newPos = {
@@ -216,7 +213,7 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
     else if (_grid[newRow][newCol] == '#') {
         validMove = false;
     }
-    //only update player position if the move is valid
+    //only updates player position if the move is valid
     if (validMove) {
         getSprite().setPosition(newPos);
     }
@@ -225,7 +222,11 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
         m_momentum *= -1.0f; 
     }
 }
+
+//player input handler 
 void Player::handleInput(sf::Keyboard::Key _key) {
+
+    //update buffer with corresponding direction-vectors if a movement key is pressed
     if (_key == sf::Keyboard::Key::W) m_buffer = {0.0f, -1.0f};
     if (_key == sf::Keyboard::Key::S) m_buffer = {0.0f, 1.0f};
     if (_key == sf::Keyboard::Key::A) m_buffer = {-1.0f, 0.0f};

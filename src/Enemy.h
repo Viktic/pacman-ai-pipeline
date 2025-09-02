@@ -7,7 +7,7 @@
 #include <string>
 #include <random>
 
-//enemy class is derived from entity class
+//Enemy class is derived from Entity class
 class Enemy: public Entity{
 
 public:
