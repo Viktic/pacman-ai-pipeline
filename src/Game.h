@@ -45,7 +45,7 @@ private:
 
     std::vector<std::unique_ptr<Pellet>> m_pPellets; 
     std::vector<std::string> m_grid;
-    std::vector<sf::RectangleShape*> m_pBorders;
+    std::vector<std::unique_ptr<sf::RectangleShape>> m_pBorders;
     std::vector<std::unique_ptr<Entity>> m_pEntities; 
     sf::RenderWindow m_window;
 

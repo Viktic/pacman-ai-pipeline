@@ -46,12 +46,14 @@ void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
 
 //constructs a new rectangle object
 void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color) {
-    sf::RectangleShape* rect = new sf::RectangleShape({_tileSize, _tileSize});
-    rect->setPosition(_spawnPosition);
-    rect->setFillColor(sf::Color::Black);
-    rect->setOutlineColor(_color);
-    rect->setOutlineThickness(5.0f);
-    m_pBorders.push_back(rect);
+
+    std::unique_ptr<sf::RectangleShape> pBorder = std::make_unique<sf::RectangleShape>(sf::Vector2f{ m_tileSize, m_tileSize });
+
+    pBorder->setPosition(_spawnPosition);
+    pBorder->setFillColor(sf::Color::Black );
+    pBorder->setOutlineColor(_color);
+    pBorder->setOutlineThickness(5.0f);
+    m_pBorders.push_back(std::move(pBorder));
 }
 
 //constructs a new pellet with unique_ptr ownership and places it in the m_pEntities vector
@@ -127,15 +129,9 @@ bool Game::validCrossing(int _pX, int _pY) {
 //resets all the ownership vectors and deletes allocated object instances
 void Game::clearGame() {
  
-    //delete border instances
-    size_t borderCount = m_pBorders.size();
-    for (size_t i = 0; i < borderCount; ++i) {
-        sf::RectangleShape* curr = m_pBorders[i];
-        delete curr;
-    }
+
     //clear borders vector
     m_pBorders.clear();
-
     //clear entities and pellets vector (automatically frees memory controlled by smart pointers) 
     m_pEntities.clear();
     m_pPellets.clear();
@@ -220,8 +216,7 @@ void Game::render() {
     size_t borderCount = m_pBorders.size();
 
     for (size_t i = 0; i < borderCount; ++i) {
-        sf::RectangleShape* curr = m_pBorders[i];
-        m_window.draw(*curr);
+        m_window.draw(*(m_pBorders[i].get()));
     }
 
     //render entity-objects
@@ -419,8 +414,6 @@ bool Game::getState() {
 //game destructor
 Game::~Game() {
     clearGame();
-    m_pEntities.clear();
-    m_pBorders.clear();
 }
 
 
