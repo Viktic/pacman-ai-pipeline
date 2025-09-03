@@ -16,6 +16,7 @@ class Entity {
 public:
 
     Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition);
+    virtual ~Entity() = default;
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
     virtual void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) = 0;
