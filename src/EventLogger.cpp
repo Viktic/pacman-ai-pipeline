@@ -4,6 +4,7 @@
 
 #include "EventLogger.h"
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <nlohmann/json.hpp>
 
@@ -32,6 +33,21 @@ EventLogger::EventLogger() {
 
 }
 
+//initialize manifest.jsonl if manifest does not exist yet
+void EventLogger::initializeManifest() {
+
+	if (!std::filesystem::exists(m_rawDataManifest)) {
+		std::ofstream manifest(m_rawDataManifest); 
+		std::string jsonObject = "{\"session_id\": 1, \"file_path\" : \"\" }";
+		manifest << jsonObject;
+		manifest.close(); 
+	}
+	else {
+		return;
+	}
+}
+
+
 //retrieves the latest sessions id from the manifest and increments it to get the current session_id
 int EventLogger::getSessionId() {
 
@@ -48,22 +64,32 @@ int EventLogger::getSessionId() {
 	char c; 
 	std::string lastLine; 
 
+	//flag to catch edge case where manifest contains only a single json object
+	bool singularJsonObject = true; 
+
 	//moves the stream position to the last newline character (beginning of the last jsonl line) 
 	for (--streamPos; streamPos >= 0; --streamPos) {
 		manifest.seekg(streamPos);
 		manifest.read(&c, 1); 
 		if (c == '\n') {
+			singularJsonObject = false; 
 			break; 
 		}
 	}
 
 	//reads the last line (last json object)
-	getline(manifest, lastLine); 
+	getline(manifest, lastLine);
+	
+	//read the first character if the manifest contains only a single json object
+	if (singularJsonObject == true) {
+		manifest.read(&c, 1);
+		lastLine.insert(lastLine.begin(), c);
+	}
 
 
 	//throw error if manifest is empty
 	if (lastLine.empty()) {
-		std::cerr << "line is empty" << std::endl; 
+		std::cerr << "manifest.jonsl is empty" << std::endl;
 	}
 
 	//parse the lastLine json object and extract the last session_id

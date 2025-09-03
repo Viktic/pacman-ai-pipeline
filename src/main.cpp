@@ -12,7 +12,8 @@ int main()
 {
     //initialize EventLogger
     EventLogger* pEventLogger = new EventLogger();
-    std::cout << pEventLogger->getSessionId() << std::endl;
+    pEventLogger->initializeManifest(); 
+    std::cout << pEventLogger->getSessionId() << std::endl; 
 
     delete pEventLogger; 
 

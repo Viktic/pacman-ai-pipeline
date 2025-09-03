@@ -11,7 +11,7 @@ public:
 
 	EventLogger();
 	int getSessionId(); 
-
+	void initializeManifest(); 
 
 private: 
 
