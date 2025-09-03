@@ -12,11 +12,13 @@ public:
 	EventLogger();
 	int getSessionId(); 
 	void initializeManifest(); 
+	void initializeSession();
 
 private: 
 
 	std::string m_rawDataDir; 
 	std::string m_rawDataManifest; 
+	std::string m_sessionPath; 
 
 };
 
