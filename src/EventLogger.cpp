@@ -118,11 +118,15 @@ void EventLogger::initializeSession() {
 	
 
 	//create the session
-	m_sessionStream.open(m_sessionPath, std::ios::app);
+	m_sessionStream.open(m_sessionPath, std::ios::out);
 	if (!m_sessionStream.is_open()) {
 		std::cerr << "failed to create session";
 		return; 
 	}
+
+	//intialize session json object;
+	m_session["ticks"] = nlohmann::json::array(); 
+
 
 	//open manifest in append mode
 	std::ofstream manifest(m_rawDataManifest, std::ofstream::app);
@@ -136,4 +140,34 @@ void EventLogger::initializeSession() {
 	
 	manifest << jsonObject; 
 	manifest.close(); 
+
+
+}
+
+void EventLogger::gatherLogData(LogData& _data) {
+
+	//create a tick json object that contains all the important data from the current tick
+	nlohmann::json tick = {
+		{"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
+		{"enemy_position_screen", {_data.m_enemyScreenPosition.x, _data.m_enemyScreenPosition.y}},
+		{"player_position_grid", {_data.m_playerGridPosition.x, _data.m_playerGridPosition.y}},
+		{"enemy_position_grid", {_data.m_enemyGridPosition.x, _data.m_enemyGridPosition.y}},
+		{"pellet_pickedUpState", _data.m_pelletPickedUp},
+		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
+		{"enemy_momentum", {_data.m_enemyMomentum.x, _data.m_enemyMomentum.y}},
+		{"player_buffer", {_data.m_playerBuffer.x, _data.m_playerBuffer.y}},
+		{"score", _data.m_score}
+	};
+
+	//write the current tick data into the session object
+	m_session["ticks"].push_back(tick);
+}
+
+void EventLogger::writeLogData() {
+	//write the session object into the session.json file
+	m_sessionStream << m_session.dump(4);
+}
+
+EventLogger::~EventLogger() {
+	m_sessionStream.close(); 
 }

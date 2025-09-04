@@ -41,10 +41,11 @@ add_executable(main
     src/Enemy.h
     src/Game.cpp
     src/Game.h
-    
     src/tool.h
     src/Pellet.cpp
-    src/Pellet.h "src/EventLogger.h" "src/EventLogger.cpp")
+    src/Pellet.h 
+    src/EventLogger.h 
+    src/EventLogger.cpp)
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)

@@ -3,8 +3,11 @@
 //
 
 #pragma once
+#include "LogData.h"
 #include <string>
 #include <fstream>
+#include <nlohmann/json.hpp>
+
 
 class EventLogger {
 
@@ -14,9 +17,13 @@ public:
 	int getSessionId(); 
 	void initializeManifest(); 
 	void initializeSession();
+	void gatherLogData(LogData& _data); 
+	void writeLogData(); 
+	~EventLogger();
 
 private: 
 
+	nlohmann::json m_session; 
 	std::fstream m_sessionStream; 
 	std::string m_rawDataDir; 
 	std::string m_rawDataManifest; 
