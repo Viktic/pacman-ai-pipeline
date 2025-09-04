@@ -10,11 +10,7 @@
 
 int main()
 {
-    //initialize EventLogger
-    EventLogger* pEventLogger = new EventLogger();
-    pEventLogger->initializeSession();
 
-    delete pEventLogger; 
 
 
     //initialize Game Instance

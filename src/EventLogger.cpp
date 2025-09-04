@@ -8,6 +8,8 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
+int EventLogger::tickCount = 0; 
+
 
 //EventLogger constructor
 EventLogger::EventLogger() {
@@ -31,24 +33,22 @@ EventLogger::EventLogger() {
 	//set the rawDataManifest path
 	m_rawDataManifest = j["rawDataDirManifest"]; 
 
-	//initialize manifest.jsonl if manifest does not exist yet
-	if (!std::filesystem::exists(m_rawDataManifest)) {
-		//create first manifest entry
-		std::ofstream manifest(m_rawDataManifest);
-		std::string jsonObject = "{\"session_id\":1, \"file_path\":\"sessions/session_1.json\" }";
-		manifest << jsonObject;
-		manifest.close();
-
-		//create first session.json
-		m_sessionStream.open(m_rawDataDir + "/sessions/session_1.json", std::ios::out);
-		if (!m_sessionStream.is_open()) {
-			std::cerr << "failed to create session" << std::endl;
-		}
-	}
 }
 
 //retrieves the latest sessions id from the manifest and increments it to get the current session_id
 int EventLogger::getSessionId() {
+
+	//initialize manifest.jsonl if manifest does not exist yet
+	if (!std::filesystem::exists(m_rawDataManifest)) {
+		//create the manifest
+		std::ofstream manifest(m_rawDataManifest);
+		if (!manifest.is_open()) {
+			std::cerr << "failed to open file: data/raw/manifest.jsonl" << std::endl;
+		}
+		manifest.close();
+		return 0;
+	}
+
 
 	//open the manifest.jsonl 
 	std::ifstream manifest(m_rawDataManifest, std::ifstream::binary);
@@ -105,9 +105,12 @@ int EventLogger::getSessionId() {
 //initializes a new session json file in the raw/sessions directory
 void EventLogger::initializeSession() {
 
-	//check if the sessionStream is already open
+
+	tickCount = 0; 
+	m_session.clear(); 
+	//check if the sessionStream is still open
 	if (m_sessionStream.is_open()) {
-		return;
+		m_sessionStream.close(); 
 	}
 
 	int sessionId = getSessionId(); 
@@ -141,26 +144,34 @@ void EventLogger::initializeSession() {
 	manifest << jsonObject; 
 	manifest.close(); 
 
-
 }
 
 void EventLogger::gatherLogData(LogData& _data) {
 
 	//create a tick json object that contains all the important data from the current tick
 	nlohmann::json tick = {
+		{"tick", tickCount},
 		{"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
-		{"enemy_position_screen", {_data.m_enemyScreenPosition.x, _data.m_enemyScreenPosition.y}},
 		{"player_position_grid", {_data.m_playerGridPosition.x, _data.m_playerGridPosition.y}},
-		{"enemy_position_grid", {_data.m_enemyGridPosition.x, _data.m_enemyGridPosition.y}},
-		{"pellet_pickedUpState", _data.m_pelletPickedUp},
 		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
-		{"enemy_momentum", {_data.m_enemyMomentum.x, _data.m_enemyMomentum.y}},
 		{"player_buffer", {_data.m_playerBuffer.x, _data.m_playerBuffer.y}},
 		{"score", _data.m_score}
 	};
 
+	for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
+		tick["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].x });
+	}
+	for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
+		tick["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].x });
+	}
+	for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
+		tick["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+	}
+
+
 	//write the current tick data into the session object
 	m_session["ticks"].push_back(tick);
+	tickCount++; 
 }
 
 void EventLogger::writeLogData() {
@@ -168,6 +179,17 @@ void EventLogger::writeLogData() {
 	m_sessionStream << m_session.dump(4);
 }
 
+void EventLogger::closeSession() {
+	m_sessionStream.close();
+}
+
+bool EventLogger::isSessionOpen() {
+	if (m_sessionStream.is_open()) {
+		return true; 
+	} 
+	return false; 
+}
+
 EventLogger::~EventLogger() {
-	m_sessionStream.close(); 
+	closeSession();
 }

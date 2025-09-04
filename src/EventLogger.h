@@ -14,14 +14,18 @@ class EventLogger {
 public: 
 
 	EventLogger();
-	int getSessionId(); 
+	int getSessionId();
+	bool isSessionOpen(); 
 	void initializeManifest(); 
 	void initializeSession();
 	void gatherLogData(LogData& _data); 
-	void writeLogData(); 
+	void writeLogData();
+	void closeSession(); 
 	~EventLogger();
 
 private: 
+
+	static int tickCount;
 
 	nlohmann::json m_session; 
 	std::fstream m_sessionStream; 

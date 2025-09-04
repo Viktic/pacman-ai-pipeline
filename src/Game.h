@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "tool.h"
+#include "EventLogger.h"
 #include <vector>
 #include <memory>
 #include <SFML/Graphics.hpp>
@@ -48,6 +49,7 @@ private:
     std::vector<std::unique_ptr<sf::RectangleShape>> m_pBorders;
     std::vector<std::unique_ptr<Entity>> m_pEntities; 
     sf::RenderWindow m_window;
+    std::unique_ptr<EventLogger> m_pEventLogger; 
 
     //hash set which contains the grid coordinates of all valid crossings
     std::unordered_set<sf::Vector2i, tool::sfVector2iHash> m_crossings;
@@ -58,6 +60,7 @@ private:
     unsigned m_borderY;
     bool m_gameRunning;
     bool m_gameInitialized;
+
 };
 
 

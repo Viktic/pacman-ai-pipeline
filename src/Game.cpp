@@ -7,6 +7,8 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Pellet.h"
+#include "LogData.h"
+#include "EventLogger.h"
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
@@ -36,7 +38,11 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
 }),
 m_tileSize(80){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
-    m_window.setFramerateLimit(144);
+    m_window.setFramerateLimit(100);
+    
+    //EventLogger initialization
+    m_pEventLogger = std::make_unique<EventLogger>();
+
 }
 
 //constructs a new enemy with unique_ptr ownership and places it in the m_pEntities vector
@@ -141,7 +147,10 @@ void Game::clearGame() {
 void Game::initialize() {
 
     //clear game first to avoid memory leaks 
-    clearGame(); 
+    clearGame();
+    
+    //initialize the logging session
+    m_pEventLogger->initializeSession();
 
     //loop through the grid array to initialize game-objects
     for (int i = 0; i < m_grid.size(); ++i) {
@@ -194,8 +203,9 @@ void Game::initialize() {
             }
             }
         }
-        m_gameInitialized = true;
     }
+    m_gameInitialized = true;
+
 }
 
 //renders game-objects
@@ -340,33 +350,71 @@ void Game::run() {
             while (m_gameRunning) { 
                 //game input handler
                 handleInput();
-
+                LogData* pLogData = new LogData; 
+                pLogData->m_score = m_score;
                 //updates the movement for all entities and checks collision between player and enemies
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
-                    m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
 
                     //skip player to avoid self referring collision detection
                     if (m_pEntities[i].get() != pPlayer) {
                         
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
                         Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i].get());
+                        
                         if (pEnemy) {
+
+                            //add the Enemy specific data to pLogData
+                            sf::Vector2f enemyPosition = pEnemy->getSprite().getPosition();
+                            int col = int((enemyPosition.x - 0.5f * m_tileSize) / m_tileSize);
+                            int row = int((enemyPosition.y - 0.5f * m_tileSize) / m_tileSize);
+
+                            pLogData->m_enemyScreenPositions.push_back(enemyPosition);
+                            pLogData->m_enemyMomenta.push_back(pEnemy->getMomentum());
+                            pLogData->m_enemyGridPositions.push_back(sf::Vector2i{ col, row });
+
+                            //detect collisions between player and enemy
                             checkCollisionEnemy(*pPlayer, *pEnemy);
                         }
                     }
+                    else if (pPlayer && m_pEntities[i].get() == pPlayer) {
+
+                        //add the Player specific data to pLogData
+                        sf::Vector2f playerPosition = pPlayer->getSprite().getPosition();
+                        int col = static_cast<int>(floor(playerPosition.x / m_tileSize));
+                        int row = static_cast<int>(floor(playerPosition.y / m_tileSize));
+                        pLogData->m_playerScreenPosition = playerPosition;
+                        pLogData->m_playerGridPosition = sf::Vector2i{ col, row };
+                        pLogData->m_playerMomentum = pPlayer->getMomentum(); 
+                        pLogData->m_playerBuffer = pPlayer->getBuffer();
+                        
+                    }
+                    
+                    m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+
                 }
                 //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
+
                     if (m_pPellets[i]->getPickedUpState() == false) {
                         checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
                     }
+
                 }
                 render();
+
+
+
+                m_pEventLogger->gatherLogData(*pLogData); 
+                delete pLogData; 
             }
         }
 
         //if GameOver wait for player input to restart the game or close the window
         else {
+            //if GameOver push the gathered Data and close the current session stream
+            m_pEventLogger->writeLogData();
+            m_pEventLogger->closeSession(); 
+
 
             while (!m_gameRunning && m_window.isOpen()) {
                 while (auto eventOpt = m_window.pollEvent()) {
@@ -413,6 +461,10 @@ bool Game::getState() {
 
 //game destructor
 Game::~Game() {
+    if (m_pEventLogger && m_pEventLogger->isSessionOpen()) {
+        m_pEventLogger->writeLogData();
+        m_pEventLogger->closeSession(); 
+    }
     clearGame();
 }
 
