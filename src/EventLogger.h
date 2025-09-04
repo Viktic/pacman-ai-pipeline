@@ -4,6 +4,7 @@
 
 #pragma once
 #include <string>
+#include <fstream>
 
 class EventLogger {
 
@@ -16,6 +17,7 @@ public:
 
 private: 
 
+	std::fstream m_sessionStream; 
 	std::string m_rawDataDir; 
 	std::string m_rawDataManifest; 
 	std::string m_sessionPath; 

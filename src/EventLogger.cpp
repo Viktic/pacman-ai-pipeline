@@ -31,27 +31,21 @@ EventLogger::EventLogger() {
 	//set the rawDataManifest path
 	m_rawDataManifest = j["rawDataDirManifest"]; 
 
-}
-
-//initialize manifest.jsonl if manifest does not exist yet
-void EventLogger::initializeManifest() {
-
+	//initialize manifest.jsonl if manifest does not exist yet
 	if (!std::filesystem::exists(m_rawDataManifest)) {
-		
 		//create first manifest entry
-		std::ofstream manifest(m_rawDataManifest); 
+		std::ofstream manifest(m_rawDataManifest);
 		std::string jsonObject = "{\"session_id\":1, \"file_path\":\"sessions/session_1.json\" }";
 		manifest << jsonObject;
-		manifest.close(); 
-		
+		manifest.close();
+
 		//create first session.json
-		std::ofstream session(m_rawDataDir + "/sessions/session_1.json"); 
-		if (!session.is_open()) {
-			std::cerr << "failed to create session" << std::endl; 
-		} else session.close(); 
+		m_sessionStream.open(m_rawDataDir + "/sessions/session_1.json", std::ios::out);
+		if (!m_sessionStream.is_open()) {
+			std::cerr << "failed to create session" << std::endl;
+		}
 	}
 }
-
 
 //retrieves the latest sessions id from the manifest and increments it to get the current session_id
 int EventLogger::getSessionId() {
@@ -111,28 +105,35 @@ int EventLogger::getSessionId() {
 //initializes a new session json file in the raw/sessions directory
 void EventLogger::initializeSession() {
 
+	//check if the sessionStream is already open
+	if (m_sessionStream.is_open()) {
+		return;
+	}
+
 	int sessionId = getSessionId(); 
 	std::string sessionIdString = std::to_string(sessionId);
 	std::string sessionString = "sessions/session_" + sessionIdString + ".json";
 
 	m_sessionPath = m_rawDataDir + "/" + sessionString;
 	
+
 	//create the session
-	std::ofstream session(m_sessionPath);
-	if (!session.is_open()) {
+	m_sessionStream.open(m_sessionPath, std::ios::app);
+	if (!m_sessionStream.is_open()) {
 		std::cerr << "failed to create session";
+		return; 
 	}
-	session.close(); 
-	
+
 	//open manifest in append mode
 	std::ofstream manifest(m_rawDataManifest, std::ofstream::app);
 	if (!manifest.is_open()) {
 		std::cerr << "failed to open manifest" << std::endl; 
 	}
+	
 
 	//write the new session information into the manifest
 	std::string jsonObject = "\n{\"session_id\":" + sessionIdString + ", \"file_path\":\"" + sessionString + "\" }";
+	
 	manifest << jsonObject; 
 	manifest.close(); 
-
 }
