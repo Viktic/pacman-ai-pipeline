@@ -354,9 +354,9 @@ void Game::run() {
             while (m_gameRunning) { 
                 //game input handler
                 handleInput();
-                LogData* pLogData = new LogData; 
-                pLogData->m_score = m_score;
-                pLogData->m_tick = m_frameCount; 
+                LogData logData; 
+                logData.m_score = m_score;
+                logData.m_tick = m_frameCount; 
                 //updates the movement for all entities and checks collision between player and enemies
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
 
@@ -373,9 +373,9 @@ void Game::run() {
                             int col = int((enemyPosition.x - 0.5f * m_tileSize) / m_tileSize);
                             int row = int((enemyPosition.y - 0.5f * m_tileSize) / m_tileSize);
 
-                            pLogData->m_enemyScreenPositions.push_back(enemyPosition);
-                            pLogData->m_enemyMomenta.push_back(pEnemy->getMomentum());
-                            pLogData->m_enemyGridPositions.push_back(sf::Vector2i{ col, row });
+                            logData.m_enemyScreenPositions.push_back(enemyPosition);
+                            logData.m_enemyMomenta.push_back(pEnemy->getMomentum());
+                            logData.m_enemyGridPositions.push_back(sf::Vector2i{ col, row });
 
                             //detect collisions between player and enemy
                             checkCollisionEnemy(*pPlayer, *pEnemy);
@@ -387,10 +387,10 @@ void Game::run() {
                         sf::Vector2f playerPosition = pPlayer->getSprite().getPosition();
                         int col = static_cast<int>(floor(playerPosition.x / m_tileSize));
                         int row = static_cast<int>(floor(playerPosition.y / m_tileSize));
-                        pLogData->m_playerScreenPosition = playerPosition;
-                        pLogData->m_playerGridPosition = sf::Vector2i{ col, row };
-                        pLogData->m_playerMomentum = pPlayer->getMomentum(); 
-                        pLogData->m_playerBuffer = pPlayer->getBuffer();
+                        logData.m_playerScreenPosition = playerPosition;
+                        logData.m_playerGridPosition = sf::Vector2i{ col, row };
+                        logData.m_playerMomentum = pPlayer->getMomentum();
+                        logData.m_playerBuffer = pPlayer->getBuffer();
                         
                     }
                     
@@ -399,28 +399,18 @@ void Game::run() {
                 }
                 //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
-                    int scoreStamp = m_score;
                     if (m_pPellets[i]->getPickedUpState() == false) {
                         checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
                     }
-
-                    //if score has increased log the event
-                    if (m_score > scoreStamp) {
-                        m_pEventLogger->gatherLogData(*pLogData);
-                    }
-
                 }
 
                 //base log interval every 10 frames 
                 if (m_frameCount % 10 == 0) {
-                    m_pEventLogger->gatherLogData(*pLogData);
+                    m_pEventLogger->gatherLogData(logData);
                 }
                 
                 render();
                 m_frameCount++; 
-
-
-                delete pLogData; 
             }
         }
 
