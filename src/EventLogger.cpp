@@ -159,10 +159,10 @@ void EventLogger::gatherLogData(LogData& _data) {
 	};
 
 	for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
-		tick["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].x });
+		tick["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
 	}
 	for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
-		tick["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].x });
+		tick["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
 	}
 	for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
 		tick["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
