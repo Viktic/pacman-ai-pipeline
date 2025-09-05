@@ -25,7 +25,6 @@ public:
 
 private: 
 
-	static int tickCount;
 
 	nlohmann::json m_session; 
 	std::fstream m_sessionStream; 

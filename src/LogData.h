@@ -17,4 +17,5 @@ struct LogData {
 	std::vector<sf::Vector2f> m_enemyMomenta; //
 	sf::Vector2f m_playerBuffer; //
 	int m_score; 
+	unsigned long m_tick; 
 };

@@ -60,7 +60,7 @@ private:
     unsigned m_borderY;
     bool m_gameRunning;
     bool m_gameInitialized;
-
+    unsigned long m_frameCount; 
 };
 
 

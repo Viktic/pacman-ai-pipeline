@@ -8,7 +8,6 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-int EventLogger::tickCount = 0; 
 
 
 //EventLogger constructor
@@ -106,7 +105,6 @@ int EventLogger::getSessionId() {
 void EventLogger::initializeSession() {
 
 
-	tickCount = 0; 
 	m_session.clear(); 
 	//check if the sessionStream is still open
 	if (m_sessionStream.is_open()) {
@@ -150,7 +148,7 @@ void EventLogger::gatherLogData(LogData& _data) {
 
 	//create a tick json object that contains all the important data from the current tick
 	nlohmann::json tick = {
-		{"tick", tickCount},
+		{"tick", _data.m_tick},
 		{"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
 		{"player_position_grid", {_data.m_playerGridPosition.x, _data.m_playerGridPosition.y}},
 		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
@@ -171,7 +169,7 @@ void EventLogger::gatherLogData(LogData& _data) {
 
 	//write the current tick data into the session object
 	m_session["ticks"].push_back(tick);
-	tickCount++; 
+
 }
 
 void EventLogger::writeLogData() {

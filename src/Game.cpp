@@ -152,6 +152,9 @@ void Game::initialize() {
     //initialize the logging session
     m_pEventLogger->initializeSession();
 
+    //reset the frame count
+    m_frameCount = 0; 
+
     //loop through the grid array to initialize game-objects
     for (int i = 0; i < m_grid.size(); ++i) {
         for (int j = 0; j < m_grid[0].size(); ++j) {
@@ -346,12 +349,14 @@ void Game::run() {
           
             Player* pPlayer = Player::instance; 
 
+
             //inner game loop (handles the current game logic)
             while (m_gameRunning) { 
                 //game input handler
                 handleInput();
                 LogData* pLogData = new LogData; 
                 pLogData->m_score = m_score;
+                pLogData->m_tick = m_frameCount; 
                 //updates the movement for all entities and checks collision between player and enemies
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
 
@@ -394,17 +399,27 @@ void Game::run() {
                 }
                 //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
-
+                    int scoreStamp = m_score;
                     if (m_pPellets[i]->getPickedUpState() == false) {
                         checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
                     }
 
+                    //if score has increased log the event
+                    if (m_score > scoreStamp) {
+                        m_pEventLogger->gatherLogData(*pLogData);
+                    }
+
                 }
+
+                //base log interval every 10 frames 
+                if (m_frameCount % 10 == 0) {
+                    m_pEventLogger->gatherLogData(*pLogData);
+                }
+                
                 render();
+                m_frameCount++; 
 
 
-
-                m_pEventLogger->gatherLogData(*pLogData); 
                 delete pLogData; 
             }
         }
