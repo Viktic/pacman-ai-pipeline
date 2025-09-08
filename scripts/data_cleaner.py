@@ -15,6 +15,8 @@ with open(jsonPath) as f:
 #convert the json data into a dataframe
 df = pd.json_normalize(raw_json["ticks"])
 
+#drop all rows that contain NaN-values
+df = df.dropna()
 
 #constant position scalars to normalize coordinate values
 grid_height = 11
@@ -82,7 +84,7 @@ player_gridY = df["player_position_grid"].str[1] / grid_height
 df["player_position_gridY"] = player_gridY
 
 #split player buffer coordinates into seperate columns
-df["player_bufferX"] = df["player_buffer"].str[0]
+df["player_bufferX"] = df["player_buffer"].str[0]   
 df["player_bufferY"] = df["player_buffer"].str[1]
 
 #split the player momentum coordinates into seperate columns
@@ -93,7 +95,5 @@ df["player_momentumY"] = df["player_momentum"].str[1]
 df.drop(columns=["enemy_momenta", "enemy_positions_screen", "enemy_positions_grid", "player_position_screen", "player_position_grid", "player_buffer", "player_momentum"], inplace=True)
 
 
-pd.set_option('display.max_columns', None) 
+
 print(df.head())
-
-
