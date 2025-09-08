@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import json
-import ast
 
 #relative pathing for easier setup 
 dirPath = os.path.dirname(os.path.realpath(__file__))
