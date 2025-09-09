@@ -102,9 +102,19 @@ def cleanData(_jsonPath, _parquetPath):
     #drop the old columns from the dataframe
     df.drop(columns=["enemy_momenta", "enemy_positions_screen", "enemy_positions_grid", "player_position_screen", "player_position_grid", "player_buffer", "player_momentum"], inplace=True)
 
+    #shift player buffer-collumn by -1 so that the datapoints are labeled with the players reaction to the current state
+    df["player_bufferX"] = df["player_bufferX"].shift(-1)
+    df["player_bufferY"] = df["player_bufferY"].shift(-1)
+
+    #drop the last row because there is no player reaction to that game-state
+    last_row = len(df)-1
+
+    df.drop(df.index[last_row], inplace=True)
+
     #turn the clean-data-dataframe into parquet
     df.to_parquet(_parquetPath)
-    
+    print(df.tail())
+
     #DEBUGGING ONLY
     print("parquet conversion succesful")
 
