@@ -6,7 +6,7 @@ import json
 
 #relative pathing for easier setup 
 dirPath = os.path.dirname(os.path.realpath(__file__))
-rawSessionsPath = os.path.join(dirPath, "../../data/raw/sessions")
+rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
 
 
 def cleanData(_jsonPath, _parquetPath):
@@ -106,13 +106,13 @@ def cleanData(_jsonPath, _parquetPath):
 #iterate over all sessions files
 sessions_dir = os.fsencode(rawSessionsPath)
 #clean-data-manifest path
-manifestPath = os.path.join(dirPath, "../../data/processed/manifest.jsonl")
+manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
 for file in os.listdir(sessions_dir):
 
     filename = os.fsencode(file)
     session_id = int(filename[8:-5])
-    jsonPath = os.path.join(sessions_dir, filename)
-    parquetPath = os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet")
+    jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
+    parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     
     #flag to catch edge case where manifest contains only a singular json object
     singularJsonObject = True
