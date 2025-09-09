@@ -108,20 +108,20 @@ def cleanData(_jsonPath, _parquetPath):
 
     #drop the last row because there is no player reaction to that game-state
     last_row = len(df)-1
-
     df.drop(df.index[last_row], inplace=True)
 
     #turn the clean-data-dataframe into parquet
     df.to_parquet(_parquetPath)
-    print(df.tail())
 
-    #DEBUGGING ONLY
+
     print("parquet conversion succesful")
 
 #iterate over all sessions files
 sessions_dir = os.fsencode(rawSessionsPath)
 #clean-data-manifest path
 manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
+
+#clean every raw-data-session-file and add save it as parquet in the processed-sessions-directory
 for file in os.listdir(sessions_dir):
 
     filename = file
@@ -129,6 +129,7 @@ for file in os.listdir(sessions_dir):
     jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
     parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     
+    #create processed-data-manifest if it does not already exist
     if os.path.exists(manifestPath) == False: 
         with open(manifestPath, "a") as f: 
                 data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
@@ -138,9 +139,11 @@ for file in os.listdir(sessions_dir):
         cleanData(jsonPath, parquetPath)
         continue
 
+    #turn data in into json-object
     data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
     jsonString = json.dumps(data)
 
+    #check if the file thats currently processed has already been logged in the manifest
     exists = False
     with open(manifestPath, "r") as f: 
         for line in f: 
@@ -148,13 +151,11 @@ for file in os.listdir(sessions_dir):
                 exists = True 
                 break
         
-    #write the new parquet file into manifest
+    #log the current file in the manifest
     if not exists: 
         with open(manifestPath, "a") as f: 
             f.write("\n" + jsonString) 
             
-        
-
-
+    #clean the file and write the parquet file into data/processed/sessions 
     cleanData(jsonPath, parquetPath)
     
