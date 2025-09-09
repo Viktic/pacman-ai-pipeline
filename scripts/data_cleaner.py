@@ -117,15 +117,19 @@ def cleanData(_jsonPath, _parquetPath):
     print("parquet conversion succesful")
 
 #iterate over all sessions files
-sessions_dir = os.fsencode(rawSessionsPath)
+sessions_dir = rawSessionsPath
 #clean-data-manifest path
 manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
 
 #clean every raw-data-session-file and add save it as parquet in the processed-sessions-directory
 for file in os.listdir(sessions_dir):
+    #skip hidden files in directory
+    if file.startswith('.'):
+        continue 
 
     filename = file
-    session_id = int(filename[8:-5])
+    session_id = filename[8:-5]
+    print(session_id)
     jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
     parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     
