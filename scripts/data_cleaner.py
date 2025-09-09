@@ -1,15 +1,20 @@
 import pandas as pd
 import os
 import json
-
+import pyarrow as pa
 
 
 #relative pathing for easier setup 
 dirPath = os.path.dirname(os.path.realpath(__file__))
-rawSessionsPath = os.path.join(dirPath, "../../data/raw/sessions")
+rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
 
 
 def cleanData(_jsonPath, _parquetPath):
+    
+    #return if the file has already been converted
+    if os.path.exists(_parquetPath):
+        print("parquet file already exists")
+        return
     
     #read the raw json data
     with open(_jsonPath) as f:
@@ -106,48 +111,40 @@ def cleanData(_jsonPath, _parquetPath):
 #iterate over all sessions files
 sessions_dir = os.fsencode(rawSessionsPath)
 #clean-data-manifest path
-manifestPath = os.path.join(dirPath, "../../data/processed/manifest.jsonl")
+manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
 for file in os.listdir(sessions_dir):
 
-    filename = os.fsencode(file)
+    filename = file
     session_id = int(filename[8:-5])
-    jsonPath = os.path.join(sessions_dir, filename)
-    parquetPath = os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet")
+    jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
+    parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     
-    #flag to catch edge case where manifest contains only a singular json object
-    singularJsonObject = True
+    if os.path.exists(manifestPath) == False: 
+        with open(manifestPath, "a") as f: 
+                data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
+                jsonString = json.dumps(data)
+                #only write into the file if the current session is not already in there 
+                f.write(jsonString)
+        cleanData(jsonPath, parquetPath)
+        continue
 
-    with open(manifestPath, "rb") as f: 
-        #go to the back of the file
-        f.seek(0,2) 
-        pos = f.tell() -1
-        #find the beginning of the last line
-        while pos > 0: 
-            f.seek(pos)
-            char = f.read(1)
-            if char == b"\n":
-                singularJsonObject = False
-                break 
-            pos -= 1
+    data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
+    jsonString = json.dumps(data)
 
-        lastLine = f.readline().decode("utf-8").strip()
-
-        #complete the lastLine object if there is only a singular json object
-        if singularJsonObject:
-            f.seek(1)
-            char = f.read(1)
-            lastLine = char.decode('utf-8') + lastLine
-
-            
+    exists = False
+    with open(manifestPath, "r") as f: 
+        for line in f: 
+            if line.strip() == jsonString:
+                exists = True 
+                break
         
     #write the new parquet file into manifest
-    with open(manifestPath, "w") as f: 
-        data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
-        jsonString = json.dumps(data)
-        #only write into the file if the current session is not already in there 
-        if lastLine != jsonString: 
-            f.write("\n"+jsonString)
-        f.close()
+    if not exists: 
+        with open(manifestPath, "a") as f: 
+            f.write("\n" + jsonString) 
+            
+        
 
-    #cleanData(jsonPath, parquetPath)
+
+    cleanData(jsonPath, parquetPath)
     
