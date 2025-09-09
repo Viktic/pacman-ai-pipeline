@@ -129,7 +129,7 @@ for file in os.listdir(sessions_dir):
 
     filename = file
     session_id = filename[8:-5]
-    print(session_id)
+
     jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
     parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     
