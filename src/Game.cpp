@@ -352,13 +352,23 @@ void Game::run() {
 
             //inner game loop (handles the current game logic)
             while (m_gameRunning) { 
+
+                //get player buffer before input
+                sf::Vector2f playerBufferStamp1 = pPlayer->getBuffer();
                 //game input handler
                 handleInput();
+                //get player buffer after input 
+                sf::Vector2f playerBufferStamp2 = pPlayer->getBuffer();
+
                 LogData logData; 
                 logData.m_score = m_score;
                 logData.m_tick = m_frameCount; 
                 //updates the movement for all entities and checks collision between player and enemies
+                
+                
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
+
+
 
                     //skip player to avoid self referring collision detection
                     if (m_pEntities[i].get() != pPlayer) {
@@ -366,6 +376,7 @@ void Game::run() {
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
                         Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i].get());
                         
+
                         if (pEnemy) {
 
                             //add the Enemy specific data to pLogData
@@ -390,13 +401,13 @@ void Game::run() {
                         logData.m_playerScreenPosition = playerPosition;
                         logData.m_playerGridPosition = sf::Vector2i{ col, row };
                         logData.m_playerMomentum = pPlayer->getMomentum();
-                        logData.m_playerBuffer = pPlayer->getBuffer();
-                        
+                        logData.m_playerBuffer = pPlayer->getBuffer(); 
+
                     }
                     
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
-
                 }
+
                 //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
                     if (m_pPellets[i]->getPickedUpState() == false) {
@@ -405,7 +416,8 @@ void Game::run() {
                 }
 
                 //base log interval every 10 frames 
-                if (m_frameCount % 10 == 0) {
+                //log if buffer has changed 
+                if (m_frameCount % 10 == 0 || playerBufferStamp1 != playerBufferStamp2) {
                     m_pEventLogger->gatherLogData(logData);
                 }
                 
