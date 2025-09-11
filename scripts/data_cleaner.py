@@ -126,10 +126,9 @@ for file in os.listdir(sessions_dir):
     #skip hidden files in directory
     if file.startswith('.'):
         continue 
-
+ 
     filename = file
     session_id = filename[8:-5]
-
     jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
     parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
     

@@ -10,8 +10,6 @@ processedSessionsManifestPath = os.path.normpath(os.path.join(dirpath, "../../..
 trainDatasetPath = os.path.normpath(os.path.join(dirpath, "../../../data/datasets/train.parquet"))
 testDatasetPath = os.path.normpath(os.path.join(dirpath, "../../../data/datasets/test.parquet"))
 
-sID_hash = {}
-
 #inverse golden ratio for even distribution
 alpha = (math.sqrt(5) - 1) / 2
 
