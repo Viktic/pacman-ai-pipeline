@@ -55,4 +55,8 @@ target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
 file(COPY ${CMAKE_SOURCE_DIR}/src/sprites DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 #copy paths.json into runtime directory every time the file has been changed
-configure_file(${CMAKE_SOURCE_DIR}/config/paths.json ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config)
+add_custom_command(TARGET main POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/config/paths.json
+        $<TARGET_FILE_DIR:main>/config/paths.json
+)
