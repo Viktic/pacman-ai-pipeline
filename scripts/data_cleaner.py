@@ -9,6 +9,15 @@ dirPath = os.path.dirname(os.path.realpath(__file__))
 rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
 
 
+#translation dict that assigns every buffer direction vector an index to make the feature one-dimensional
+bufferIndex = {
+    (0 , 0): 0,
+    (-1, 0): 1,
+    (1 , 0): 2,
+    (0 ,-1): 3,
+    (0 , 1): 4
+}
+
 def cleanData(_jsonPath, _parquetPath):
     
     #return if the file has already been converted
@@ -94,6 +103,9 @@ def cleanData(_jsonPath, _parquetPath):
     #split player buffer coordinates into seperate columns
     df["player_bufferX"] = df["player_buffer"].str[0]   
     df["player_bufferY"] = df["player_buffer"].str[1]
+
+    #replace the player buffer by its corresponding one-dimensional index
+    df["player_bufferIndex"] = df["player_buffer"].apply(lambda b: bufferIndex[tuple(b)])
 
     #split the player momentum coordinates into seperate columns
     df["player_momentumX"] = df["player_momentum"].str[0]
