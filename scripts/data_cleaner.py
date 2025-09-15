@@ -100,9 +100,9 @@ def cleanData(_jsonPath, _parquetPath):
     player_gridY = df["player_position_grid"].str[1] / grid_height
     df["player_position_gridY"] = player_gridY
 
-    #split player buffer coordinates into seperate columns
-    df["player_bufferX"] = df["player_buffer"].str[0]   
-    df["player_bufferY"] = df["player_buffer"].str[1]
+
+    #shift player buffer-collumn by -1 so that the datapoints are labeled with the players reaction to the current state
+    df["player_buffer"].shift(-1)
 
     #replace the player buffer by its corresponding one-dimensional index
     df["player_bufferIndex"] = df["player_buffer"].apply(lambda b: bufferIndex[tuple(b)])
@@ -114,9 +114,7 @@ def cleanData(_jsonPath, _parquetPath):
     #drop the old columns from the dataframe
     df.drop(columns=["enemy_momenta", "enemy_positions_screen", "enemy_positions_grid", "player_position_screen", "player_position_grid", "player_buffer", "player_momentum"], inplace=True)
 
-    #shift player buffer-collumn by -1 so that the datapoints are labeled with the players reaction to the current state
-    df["player_bufferX"] = df["player_bufferX"].shift(-1)
-    df["player_bufferY"] = df["player_bufferY"].shift(-1)
+
 
     #drop the last row because there is no player reaction to that game-state
     last_row = len(df)-1
