@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import json
 import pyarrow as pa
+import math
+import numpy as np
 
 
 #relative pathing for easier setup 
@@ -24,7 +26,7 @@ def cleanData(_jsonPath, _parquetPath):
     if os.path.exists(_parquetPath):
         print("parquet file already exists")
         return
-    
+     
     #read the raw json data
     with open(_jsonPath) as f:
         raw_json = json.load(f)
@@ -35,16 +37,19 @@ def cleanData(_jsonPath, _parquetPath):
     #drop all rows that contain NaN-values
     df = df.dropna()
 
-    #constant position scalars to normalize coordinate values
-    grid_height = 11
-    grid_width = 16
+    #split player screen position coordinates into seperate columns
+    player_screenX = df["player_position_screen"].str[0] 
+    df["player_position_screenX"] = player_screenX
 
-    screen_height = 1000
-    screen_width = 1600
+    player_screenY = df["player_position_screen"].str[1] 
+    df["player_position_screenY"] = player_screenY
+
 
     #split enemy momenta into seperate columns
     enemy_momenta = pd.DataFrame(df["enemy_momenta"].tolist())
     enemy_momenta.columns = [f"enemy{i}_momentum" for i in enemy_momenta.columns]
+
+
 
     #split the enemy momentum coordinates into seperate columns
     for c in enemy_momenta.columns:
@@ -58,47 +63,15 @@ def cleanData(_jsonPath, _parquetPath):
     enemy_screen_position = pd.DataFrame(df["enemy_positions_screen"].tolist())
     enemy_screen_position.columns = [f"enemy{i}_position_screen" for i in enemy_screen_position.columns]
 
-    #split enemy screen position coordinates into seperate columns
+
+
+    #calculate the distance between player and enemies
     for c in enemy_screen_position.columns:
-    
-        #normalize enemy screen position coordinates into range [0,1]
-        x = enemy_screen_position[c].str[0]
-        x = x / screen_width
-        df[c+'X'] = x
 
-        y = enemy_screen_position[c].str[1]
-        y = y / screen_height
-        df[c+'Y'] = y
-
-    #split enemy grid position into seperate columns
-    enemy_grid_position = pd.DataFrame(df["enemy_positions_grid"].tolist())
-    enemy_grid_position.columns = [f"enemy{i}_position_grid" for i in enemy_grid_position.columns]
-
-    #split enemy grid position coordinates into seperate columns
-    for c in enemy_grid_position.columns:
-
-        #normalize enemy grid position coordinates into range [0,1]
-        x = enemy_grid_position[c].str[0]
-        x = x / grid_width
-        df[c+'X'] = x
-
-        y = enemy_grid_position[c].str[1]
-        y = y / grid_height
-        df[c+'Y'] = y
-
-    #split player screen position coordinates into seperate columns
-    player_screenX = df["player_position_screen"].str[0] / screen_width
-    df["player_position_screenX"] = player_screenX
-
-    player_screenY = df["player_position_screen"].str[1] / screen_height
-    df["player_position_screenY"] = player_screenY
-
-    #split player grid coordinates into seperate columns
-    player_gridX = df["player_position_grid"].str[0] / grid_width
-    df["player_position_gridX"] = player_gridX
-
-    player_gridY = df["player_position_grid"].str[1] / grid_height
-    df["player_position_gridY"] = player_gridY
+        arr = np.array(enemy_screen_position[c].tolist(), dtype=float)  # shape (n,2)
+        dx = arr[:, 0] - player_screenX
+        dy = arr[:, 1] - player_screenY
+        df[c + "_distance"] = np.hypot(dx, dy)
 
 
     #shift player buffer-collumn by -1 so that the datapoints are labeled with the players reaction to the current state
