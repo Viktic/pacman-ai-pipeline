@@ -243,6 +243,16 @@ void EventLogger::forwardLogData(LogData& _data) {
 		{"score", _data.m_score}
 	};
 
+	for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
+		snapshot["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
+	}
+	for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
+		snapshot["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
+	}
+	for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
+		snapshot["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+	}
+
 	//sends json + newline delimiter
 	std::string jsonLine = snapshot.dump() + "\n";
 	DWORD written;
