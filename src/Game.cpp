@@ -150,7 +150,9 @@ void Game::initialize() {
     clearGame();
     
     //initialize the logging session
-    m_pEventLogger->initializeSession();
+    if (m_logGame == true) {
+        m_pEventLogger->initializeSession();
+    }
 
     //reset the frame count
     m_frameCount = 0; 
