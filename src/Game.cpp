@@ -420,6 +420,11 @@ void Game::run() {
                 if (m_frameCount % 10 == 0 || playerBufferStamp1 != playerBufferStamp2) {
                     m_pEventLogger->gatherLogData(logData);
                 }
+
+                //forward the gamestate to the ml-model every 60 frames
+                if (m_frameCount % 60 == 0) {
+                    m_pEventLogger->forwardLogData(logData);
+                }
                 
                 render();
                 m_frameCount++; 

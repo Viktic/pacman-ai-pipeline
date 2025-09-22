@@ -6,12 +6,19 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include <cstdio>
 #include <nlohmann/json.hpp>
-
+#include <windows.h>
 
 
 //EventLogger constructor
-EventLogger::EventLogger() {
+EventLogger::EventLogger() :
+
+	m_hStdinWrite(nullptr),
+	m_hStdoutRead(nullptr),
+	m_pi({}),
+	m_pythonProcessRunning(false)
+{
 
 	//all the relevant path configurations are stored in config/paths.json
 	std::fstream file("config/paths.json");
@@ -31,6 +38,41 @@ EventLogger::EventLogger() {
 
 	//set the rawDataManifest path
 	m_rawDataManifest = j["rawDataDirManifest"]; 
+
+	//start the python process
+
+	HANDLE hStdinRead;
+	HANDLE hStdoutWrite;
+
+	SECURITY_ATTRIBUTES sa{};
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = TRUE;
+	sa.lpSecurityDescriptor = nullptr;
+
+	//stdout pipe
+	CreatePipe(&m_hStdoutRead, &hStdoutWrite, &sa, 0);
+	//stdin pipe
+	CreatePipe(&hStdinRead, &m_hStdinWrite, &sa, 0);
+
+	STARTUPINFOA si{};
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESTDHANDLES;
+	si.hStdInput = hStdinRead;
+	si.hStdOutput = hStdoutWrite;
+	si.hStdError = hStdoutWrite;
+
+
+	std::string cmd = "python C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/model/ml_worker.py";
+	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
+		std::cerr << "Failed to start Python process!" << std::endl;
+	}
+
+	//closes unused pipe ends
+	CloseHandle(hStdinRead);
+	CloseHandle(hStdoutWrite);
+
+	//set the python-process-running flag to true
+	m_pythonProcessRunning = true;
 
 }
 
@@ -188,6 +230,43 @@ bool EventLogger::isSessionOpen() {
 	return false; 
 }
 
+//forwards a data snapshot to the model 
+void EventLogger::forwardLogData(LogData& _data) {
+
+	//builds json snapshot
+	nlohmann::json snapshot = {
+		{"tick", _data.m_tick},
+		{"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
+		{"player_position_grid", {_data.m_playerGridPosition.x, _data.m_playerGridPosition.y}},
+		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
+		{"player_buffer", {_data.m_playerBuffer.x, _data.m_playerBuffer.y}},
+		{"score", _data.m_score}
+	};
+
+	//sends json + newline delimiter
+	std::string jsonLine = snapshot.dump() + "\n";
+	DWORD written;
+	WriteFile(m_hStdinWrite, jsonLine.c_str(), (DWORD)jsonLine.size(), &written, nullptr);
+
+	//reads the json-line
+	std::string response;
+	char ch;
+	DWORD read;
+	while (true) {
+		if (!ReadFile(m_hStdoutRead, &ch, 1, &read, nullptr) || read == 0) break;
+		if (ch == '\n') break;
+		response.push_back(ch);
+	}
+
+	//DEBUGGING ONLY
+	std::cout << "Python replied: " << response << std::endl;
+}
+
 EventLogger::~EventLogger() {
 	closeSession();
+	
+	//process pipe cleanup
+	CloseHandle(m_hStdinWrite);
+	CloseHandle(m_hStdoutRead);
+	CloseHandle(m_pi.hThread);
 }

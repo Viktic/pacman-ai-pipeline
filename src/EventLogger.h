@@ -7,7 +7,8 @@
 #include <string>
 #include <fstream>
 #include <nlohmann/json.hpp>
-
+#include <cstdio>
+#include <windows.h>
 
 class EventLogger {
 
@@ -20,10 +21,16 @@ public:
 	void initializeSession();
 	void gatherLogData(LogData& _data); 
 	void writeLogData();
+	void forwardLogData(LogData& _data);
 	void closeSession(); 
 	~EventLogger();
 
 private: 
+
+	HANDLE m_hStdinWrite;
+	HANDLE m_hStdoutRead;
+	PROCESS_INFORMATION m_pi;
+	bool m_pythonProcessRunning;
 
 
 	nlohmann::json m_session; 
