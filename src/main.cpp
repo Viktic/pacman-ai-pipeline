@@ -14,7 +14,7 @@ int main()
 
 
     //initialize Game Instance
-    Game* pGame = new Game(1600, 1000, "OOP-Game");
+    Game* pGame = new Game(1600, 1000, "OOP-Game", false);
 
     pGame->run();
 

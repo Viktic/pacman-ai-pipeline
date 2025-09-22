@@ -19,7 +19,7 @@ class Game {
 
 public:
 
-    Game(unsigned  _windowSizeX, unsigned  _windowSizeY, const std::string& _title);
+    Game(unsigned  _windowSizeX, unsigned  _windowSizeY, const std::string& _title, bool _logGame);
     ~Game();
 
     void initialize();
@@ -58,6 +58,7 @@ private:
     float m_tileSize;
     unsigned m_borderX;
     unsigned m_borderY;
+    bool m_logGame;
     bool m_gameRunning;
     bool m_gameInitialized;
     unsigned long m_frameCount; 

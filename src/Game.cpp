@@ -14,13 +14,13 @@
 #include <SFML/Window/Event.hpp>
 
 //game constructor
-Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title) :
+Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title, bool _logGame) :
     m_borderX(_windowSizeX),
     m_borderY(_windowSizeY),
     m_gameRunning(true),
     m_gameInitialized(false),
     m_score(0),
-
+    m_logGame(_logGame),
     //ASCII-grid-map 
     m_grid(
 {
@@ -327,6 +327,7 @@ void Game::handleInput() {
     while (auto eventOpt = m_window.pollEvent()) {
         //close the window 
         if (eventOpt->is<sf::Event::Closed>()) {
+            m_gameRunning = false; 
             m_window.close();
 
         }
@@ -417,7 +418,7 @@ void Game::run() {
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
-                if (m_frameCount % 10 == 0 || playerBufferStamp1 != playerBufferStamp2) {
+                if ((m_frameCount % 10 == 0 || playerBufferStamp1 != playerBufferStamp2) && m_logGame == true) {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
@@ -434,9 +435,10 @@ void Game::run() {
         //if GameOver wait for player input to restart the game or close the window
         else {
             //if GameOver push the gathered Data and close the current session stream
-            m_pEventLogger->writeLogData();
-            m_pEventLogger->closeSession(); 
-
+            if (m_logGame == true) {
+                m_pEventLogger->writeLogData();
+                m_pEventLogger->closeSession();
+            }
 
             while (!m_gameRunning && m_window.isOpen()) {
                 while (auto eventOpt = m_window.pollEvent()) {
