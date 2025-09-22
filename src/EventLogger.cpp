@@ -39,6 +39,9 @@ EventLogger::EventLogger() :
 	//set the rawDataManifest path
 	m_rawDataManifest = j["rawDataDirManifest"]; 
 
+	//set the ml_workerPath
+	std::string ml_workerPath = j["ml_workerPath"];
+
 	//start the python process
 
 	HANDLE hStdinRead;
@@ -61,8 +64,7 @@ EventLogger::EventLogger() :
 	si.hStdOutput = hStdoutWrite;
 	si.hStdError = hStdoutWrite;
 
-	//NOTE -- ml_worker.py path has to be retrieved from config.json in the future -- NOTE
-	std::string cmd = "python C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/model/ml_worker.py";
+	std::string cmd = "python " + ml_workerPath;
 	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
 		std::cerr << "Failed to start Python process!" << std::endl;
 	}
