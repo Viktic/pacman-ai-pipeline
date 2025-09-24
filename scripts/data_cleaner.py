@@ -37,23 +37,19 @@ def cleanData(_jsonPath, _parquetPath):
     df = df.dropna()
 
     #split player screen position coordinates into seperate columns
-    player_screenX = df["player_position_screen"].str[0] 
+    player_screenX = df["player_position_screen"].str[0]
     df["player_position_screenX"] = player_screenX
 
     player_screenY = df["player_position_screen"].str[1] 
     df["player_position_screenY"] = player_screenY
 
-
     #split enemy momenta into seperate columns
     enemy_momenta = pd.DataFrame(df["enemy_momenta"].tolist())
     enemy_momenta.columns = [f"enemy{i}_momentum" for i in enemy_momenta.columns]
 
-
-
     #split the enemy momentum coordinates into seperate columns
     for c in enemy_momenta.columns:
     
-        enemy_momenta[c].str[0]
         df[c+'X'] = enemy_momenta[c].str[0]
 
         df[c+'Y'] = enemy_momenta[c].str[1]
@@ -85,7 +81,6 @@ def cleanData(_jsonPath, _parquetPath):
 
     #drop the old columns from the dataframe
     df.drop(columns=["enemy_momenta", "enemy_positions_screen", "enemy_positions_grid", "player_position_screen", "player_position_grid", "player_buffer", "player_momentum"], inplace=True)
-
 
 
     #drop the last row because there is no player reaction to that game-state
