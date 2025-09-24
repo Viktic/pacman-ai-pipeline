@@ -2,8 +2,10 @@ import sys
 import json
 import pandas as pd
 import math
+import joblib
+import os
+from xgboost import XGBClassifier
 
-    
 def cleanData(_df):
 
     _df.dropna()
@@ -37,7 +39,7 @@ def cleanData(_df):
         x = enemy_screen_positions[c].str[0].iloc[0]
         y = enemy_screen_positions[c].str[1].iloc[0]
 
-        _df[c+" _distance"] = math.sqrt((x - playerScreenX)**2 + (y - playerScreenY)**2)
+        _df[c+"_distance"] = math.sqrt((x - playerScreenX)**2 + (y - playerScreenY)**2)
 
     #split player momentum into seperate columns
     _df["player_momentumX"] = _df["player_momentum"].str[0]
@@ -55,14 +57,24 @@ def cleanData(_df):
             inplace=True)
 
     return _df
-    
+
+
+#loads the model
+file_path = os.path.dirname(os.path.realpath(__file__))
+model_path = os.path.normpath(os.path.join(file_path, "model.joblib"))
+
+model = joblib.load(model_path)
+
+
 for line in sys.stdin: 
 
     snapshot = json.loads(line)
     
-    #write snapshot into dataframe
+    #writes snapshot into dataframe
     df = pd.json_normalize(snapshot)
-    #clean the dataframe
+    #cleans the dataframe
     df = cleanData(df)
+    #gets the model prediction 
+    pred = model.predict(df) 
 
-    print(df.shape[1], flush=True)
+    print(pred, flush=True)
