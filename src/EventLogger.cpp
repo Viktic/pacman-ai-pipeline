@@ -234,7 +234,7 @@ bool EventLogger::isSessionOpen() {
 }
 
 //forwards a data snapshot to the model 
-void EventLogger::forwardLogData(LogData& _data) {
+sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 
 	//builds json snapshot
 	nlohmann::json snapshot = {
@@ -275,12 +275,11 @@ void EventLogger::forwardLogData(LogData& _data) {
 			response.pop_back();
 		}
 	}
-
-
+	
+	//convert the predicted direction into a valid direction vector
 	sf::Vector2f hashedDirection = tool::translationMap[response];
 	
-	//DEBUGGING ONLY
-	std::cout << "Direction: [" << hashedDirection.x << "," << hashedDirection.y << "]" << std::endl;
+	return hashedDirection;
 }
 
 EventLogger::~EventLogger() {

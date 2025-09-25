@@ -236,3 +236,9 @@ void Player::handleInput(sf::Keyboard::Key _key) {
     if (_key == sf::Keyboard::Key::A) m_buffer = {-1.0f, 0.0f};
     if (_key == sf::Keyboard::Key::D) m_buffer = {1.0f, 0.0f};
 }
+
+//player input reciever (if ml-model dictates input) 
+void Player::recieveInput(sf::Vector2f _buffer) {
+
+    m_buffer = _buffer; 
+}

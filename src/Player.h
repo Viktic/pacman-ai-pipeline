@@ -24,6 +24,7 @@ class Player: public Entity {
         void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) override;
         sf::Vector2f& getMomentum();
         sf::Vector2f& getBuffer(); 
+        void recieveInput(sf::Vector2f _buffer);
 
     private:
 

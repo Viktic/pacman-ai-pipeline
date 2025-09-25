@@ -25,11 +25,11 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     m_grid(
 {
     "################",
-    "#......##.E....#",
+    "#......##......#",
     "#.####.##.####.#", 
     "#..............#",
     "#.##.#.##.#.##.#",
-    "#....#.P..#....#",
+    "#....#.P..#...E#",
     "#.##.#.##.#.##.#", 
     "#..............#",
     "#.####.##.####.#",
@@ -425,10 +425,13 @@ void Game::run() {
                 }
 
                 //forward the gamestate to the ml-model every 60 frames
-                if (m_frameCount % 60 == 0) {
-                    m_pEventLogger->forwardLogData(logData);
+                if (m_frameCount % 60 == 0 && m_frameCount != 0) {
+                    sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
+
+                    pPlayer->recieveInput(predictedBuffer);
                 }
-                
+
+                    
                 render();
                 m_frameCount++; 
             }
