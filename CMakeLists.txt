@@ -10,25 +10,24 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 #SFML
-FetchContent_Declare(SFML
+FETCHCONTENT_DECLARE(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 3.0.1
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM
 )
-FetchContent_MakeAvailable(SFML)
+FETCHCONTENT_MAKEAVAILABLE(SFML)
 
 #nlohmann/json for data-storage
-FetchContent_Declare(nlohmann_json
+FETCHCONTENT_DECLARE(nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.12.0
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM
 )
-FetchContent_MakeAvailable(nlohmann_json)
-
+FETCHCONTENT_MAKEAVAILABLE(nlohmann_json)
 
 
 add_executable(main
@@ -45,7 +44,7 @@ add_executable(main
     src/Pellet.cpp
     src/Pellet.h 
     src/EventLogger.h 
-    src/EventLogger.cpp)
+    src/EventLogger.cpp "src/tool.cpp")
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)

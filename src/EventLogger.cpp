@@ -3,6 +3,7 @@
 //
 
 #include "EventLogger.h"
+#include "tool.h"
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -64,7 +65,7 @@ EventLogger::EventLogger() :
 	si.hStdOutput = hStdoutWrite;
 	si.hStdError = hStdoutWrite;
 
-	std::string cmd = "python " + ml_workerPath;
+	std::string cmd = "C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/pipeline_venv/Scripts/python.exe " + ml_workerPath;
 	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
 		std::cerr << "Failed to start Python process!" << std::endl;
 	}
@@ -268,10 +269,18 @@ void EventLogger::forwardLogData(LogData& _data) {
 		if (!ReadFile(m_hStdoutRead, &ch, 1, &read, nullptr) || read == 0) break;
 		if (ch == '\n') break;
 		response.push_back(ch);
+
+		//remove carriage return
+		if (!response.empty() && response.back() == '\r') {
+			response.pop_back();
+		}
 	}
 
+
+	sf::Vector2f hashedDirection = tool::translationMap[response];
+	
 	//DEBUGGING ONLY
-	std::cout << "Python replied: " << response << std::endl;
+	std::cout << "Direction: [" << hashedDirection.x << "," << hashedDirection.y << "]" << std::endl;
 }
 
 EventLogger::~EventLogger() {
