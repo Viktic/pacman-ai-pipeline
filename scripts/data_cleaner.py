@@ -1,17 +1,11 @@
 import pandas as pd
+import featuretools as ft
+import numpy as np
 import os
 import json
-import pyarrow as pa
-import numpy as np
+import pyarrow 
 
-
-#relative pathing for easier setup 
-dirPath = os.path.dirname(os.path.realpath(__file__))
-rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
-
-
-#translation dict that assigns every buffer direction vector an index to make the feature one-dimensional
-bufferIndex = {
+Index = {
     (0 , 0): 0,
     (-1, 0): 1,
     (1 , 0): 2,
@@ -19,96 +13,248 @@ bufferIndex = {
     (0 , 1): 4
 }
 
-def cleanData(_jsonPath, _parquetPath):
+oppositeIndex = {
+    (0 , 0): 0,
+    (-1, 0): 2, 
+    (1 , 0): 1,
+    (0 ,-1): 4,
+    (0 , 1): 3,
+}
+
+
+
+dirPath = os.path.dirname(os.path.realpath(__file__))
+rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
+
+
+
+def cleanData(raw_path):
+
+
     
-    #return if the file has already been converted
-    if os.path.exists(_parquetPath):
-        print("parquet file already exists")
-        return
-     
     #read the raw json data
-    with open(_jsonPath) as f:
-        raw_json = json.load(f)
+    with open(raw_path) as f:
+        raw = json.load(f)
 
-    #convert the json data into a dataframe
-    df = pd.json_normalize(raw_json["ticks"])
+    df = pd.json_normalize(raw["ticks"])
 
-    #drop all rows that contain NaN-values
-    df = df.dropna()
+    df.dropna()
 
-    #split player screen position coordinates into seperate columns
-    player_screenX = df["player_position_screen"].str[0]
-    df["player_position_screenX"] = player_screenX
+    ticks = df["tick"].values
+    score = df["score"].values
 
-    player_screenY = df["player_position_screen"].str[1] 
-    df["player_position_screenY"] = player_screenY
+    tick_data = {
+        "tick_id" : ticks,
+        "score" : score
+    }
 
-    #split enemy momenta into seperate columns
-    enemy_momenta = pd.DataFrame(df["enemy_momenta"].tolist())
-    enemy_momenta.columns = [f"enemy{i}_momentum" for i in enemy_momenta.columns]
-
-    #split the enemy momentum coordinates into seperate columns
-    for c in enemy_momenta.columns:
-    
-        df[c+'X'] = enemy_momenta[c].str[0]
-
-        df[c+'Y'] = enemy_momenta[c].str[1]
-
-    #split enemy screen position into seperate columns
-    enemy_screen_position = pd.DataFrame(df["enemy_positions_screen"].tolist())
-    enemy_screen_position.columns = [f"enemy{i}_position_screen" for i in enemy_screen_position.columns]
+    tick_table = pd.DataFrame(data=tick_data)
 
 
+    #read the player specific data into a seperate player table
 
-    #calculate the distance between player and enemies
-    for c in enemy_screen_position.columns:
+    df["player_posX"] = df["player_position_screen"].str[0]
+    df["player_posY"] = df["player_position_screen"].str[1]
 
-        arr = np.array(enemy_screen_position[c].tolist(), dtype=float)  # shape (n,2)
-        dx = arr[:, 0] - player_screenX
-        dy = arr[:, 1] - player_screenY
-        df[c + "_distance"] = np.hypot(dx, dy)
-
-
-    #shift player buffer-collumn by -1 so that the datapoints are labeled with the players reaction to the current state
-    df["player_buffer"].shift(-1)
-
-    #replace the player buffer by its corresponding one-dimensional index
-    df["player_bufferIndex"] = df["player_buffer"].apply(lambda b: bufferIndex[tuple(b)])
-
-    #split the player momentum coordinates into seperate columns
-    df["player_momentumX"] = df["player_momentum"].str[0]
-    df["player_momentumY"] = df["player_momentum"].str[1]
-
-    #drop the old columns from the dataframe
-    df.drop(columns=["enemy_momenta", "enemy_positions_screen", "enemy_positions_grid", "player_position_screen", "player_position_grid", "player_buffer", "player_momentum"], inplace=True)
+    player_posX = df["player_posX"]
+    player_posY = df["player_posY"]
 
 
-    #drop the last row because there is no player reaction to that game-state
-    last_row = len(df)-1
-    df.drop(df.index[last_row], inplace=True)
+    #shift the player momentum buffer by -1 to get the players reaction to the game-state
+    df["player_buffer"] = df["player_buffer"].shift(-1)
 
-    #turn the clean-data-dataframe into parquet
-    df.to_parquet(_parquetPath)
+    df.drop(df.tail(1).index, inplace=True)
+
+    #convert the player momentum buffer into the corresponding bufferIndex
+    bufferIndex = df["player_buffer"].apply(lambda x: Index[tuple(x)])
+
+    #convert the player momentum into the corresponding momentumIndex
+    momentumIndex = df["player_momentum"].apply(lambda x: Index[tuple(x)])
+
+    player_data = {
+        "tick" : ticks, 
+        "posX" : player_posX,
+        "posY" : player_posY, 
+        "player_bufferIndex" : bufferIndex, 
+        "player_momentumIndex" : momentumIndex
+    }
+
+    player_table = pd.DataFrame(data=player_data) 
+
+    #drop the last row because there is no momentum buffer for it
+    player_table.drop(player_table.tail(1).index, inplace=True)
 
 
-    print("parquet conversion succesful")
+    #read the enemy specific data into a seperate enemy table
 
-#iterate over all sessions files
-sessions_dir = rawSessionsPath
-#clean-data-manifest path
+    #unnest the momenta and screen position arrays
+    df_long = df.explode(["enemy_momenta", "enemy_positions_screen"]).reset_index(drop=True)
+
+    #fill the player enemy dataframe with player positions to avoid dimension mismatch
+    df_long[["player_posX", "player_posY"]] = df_long.groupby("tick")[["player_posX", "player_posY"]].ffill()
+
+    df_long["player_momentum"] = df_long.groupby("tick")["player_momentum"].ffill()
+    df_long["player_momentumIndex"] = df_long["player_momentum"].apply(lambda x: Index[tuple(x)])
+
+    df_long["enemy_id"] = df_long.groupby("tick").cumcount()
+
+    df_long[["enemy_posX", "enemy_posY"]] = pd.DataFrame(df_long["enemy_positions_screen"].tolist(), index=df_long.index)
+
+    df_long = df_long.drop(columns=["enemy_positions_screen"])
+
+    enemy_id = df_long["enemy_id"].values
+
+    #get the opposite Index of the current enem momentum
+    opposite_directionIndex = df_long["player_momentum"].apply(lambda x: oppositeIndex[tuple(x)])
+
+    df_long["momentum_index"] = df_long["enemy_momenta"].apply(lambda x: Index[tuple(x)])
+    df_long["opposite_direction"] = opposite_directionIndex == df_long["player_momentumIndex"]
+    df_long["opposite_direction"] = df_long["opposite_direction"].apply(lambda x: int(x))
+
+    #distance between enemy and player
+    df_long["distance"] = np.hypot (
+        df_long["enemy_posX"] - df_long["player_posX"],
+        df_long["enemy_posY"] - df_long["player_posY"]
+    )
+
+
+    ticks = df_long["tick"].values
+
+    enemy_data = {
+        "tick" : ticks, 
+        "enemy_id" : enemy_id,
+        "enemy_momentumIndex" : df_long["momentum_index"],
+        "posX" : df_long["enemy_posX"],
+        "posY" : df_long["enemy_posY"],
+        "player_dist": df_long["distance"],
+        "opposite_direction": df_long["opposite_direction"]
+    }
+
+    enemy_table = pd.DataFrame(data=enemy_data)
+
+    es = ft.EntitySet(id="game_data")
+
+    #add the tick table to the entity set
+    es = es.add_dataframe (
+        dataframe=tick_table,
+        dataframe_name="ticks",
+        index="tick_id",
+        make_index=False,
+        already_sorted=True
+    )
+
+    #add the player table to the entity set
+    es = es.add_dataframe (
+        dataframe=player_table,
+        dataframe_name = "player",
+        index="tick_id",
+        time_index="tick",
+        make_index=True,
+        already_sorted=True
+    )
+
+    #add the enemy table to the entity set
+    es = es.add_dataframe (
+        dataframe=enemy_table,
+        dataframe_name="enemy",
+        index = "tick_id",
+        time_index="tick",
+        make_index = True,
+        already_sorted= True
+    )
+
+    #add the relationships between the tables
+    es.add_relationship(
+        parent_dataframe_name="ticks",
+        parent_column_name="tick_id",
+        child_dataframe_name="player",
+        child_column_name="tick"
+    )
+
+    es.add_relationship(
+        parent_dataframe_name="ticks",
+        parent_column_name="tick_id",
+        child_dataframe_name="enemy",
+        child_column_name="tick"
+    )
+
+
+    #default aggregation primitives
+    default_agg_primitives = ["sum", "max", "min", "mean", "count"]
+
+    #deep feature synthesis (DFS)
+    features = ft.dfs(
+        entityset=es, 
+        target_dataframe_name="player",
+        agg_primitives=default_agg_primitives,
+        max_depth=2,
+        features_only=True
+    )
+
+    #feature matrix
+    feature_matrix, feature_names = ft.dfs(
+        entityset=es, 
+        target_dataframe_name="player",
+        agg_primitives=default_agg_primitives,
+        max_depth=2,
+        features_only=False, 
+        verbose=True
+    )
+
+    feature_matrix = pd.DataFrame(feature_matrix)
+
+    #remove highly correlated features
+    feature_matrix, feature_names = ft.selection.remove_highly_correlated_features(
+        feature_matrix=feature_matrix, 
+        features=features
+        )
+
+    #drop useless features
+    feature_matrix.drop(columns=["ticks.COUNT(player)", 
+                        "ticks.COUNT(enemy)", 
+                        "ticks.MAX(enemy.enemy_id)", 
+                        "ticks.MAX(enemy.enemy_momentumIndex)", 
+                        "ticks.MEAN(enemy.enemy_id)",
+                        "ticks.MEAN(enemy.enemy_momentumIndex)", 
+                        "ticks.MIN(enemy.enemy_id)",
+                        "ticks.MIN(enemy.enemy_momentumIndex)",
+                        "ticks.MIN(enemy.posX)",
+                        "ticks.MIN(enemy.posY)",
+                        "ticks.MAX(enemy.posX)",
+                        "ticks.MAX(enemy.posY)",
+                        "ticks.SUM(enemy.enemy_id)",
+                        "ticks.MAX(enemy.player_dist)",
+                        "ticks.MEAN(enemy.player_dist)"
+                        ])
+
+    return feature_matrix
+
+sessionsDir = rawSessionsPath
+
 manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
 
-#clean every raw-data-session-file and add save it as parquet in the processed-sessions-directory
-for file in os.listdir(sessions_dir):
+for file in os.listdir(sessionsDir):
     #skip hidden files in directory
     if file.startswith('.'):
-        continue 
- 
+        continue
+
     filename = file
     session_id = filename[8:-5]
-    jsonPath = os.path.normpath(os.path.join(sessions_dir, filename))
+    jsonPath = os.path.normpath(os.path.join(sessionsDir, filename))
     parquetPath = os.path.normpath(os.path.join(dirPath, f"../../data/processed/sessions/session_{session_id}.parquet"))
-    
+
+    #check if the file has already been converted
+    if os.path.exists(parquetPath):
+        print("parquet file already exists")
+        continue
+
+    try:
+        df = cleanData(jsonPath)
+        print(f"feature engineering succesful")
+    except Exception as e:
+        print(f"{file} does not contain enough features -- file skipped")
+        continue
+
     #create processed-data-manifest if it does not already exist
     if os.path.exists(manifestPath) == False: 
         with open(manifestPath, "a") as f: 
@@ -116,10 +262,9 @@ for file in os.listdir(sessions_dir):
                 jsonString = json.dumps(data)
                 #only write into the file if the current session is not already in there 
                 f.write(jsonString)
-        cleanData(jsonPath, parquetPath)
         continue
 
-    #turn data in into json-object
+    #turn data into json-object
     data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
     jsonString = json.dumps(data)
 
@@ -130,12 +275,19 @@ for file in os.listdir(sessions_dir):
             if line.strip() == jsonString:
                 exists = True 
                 break
-        
+    
     #log the current file in the manifest
     if not exists: 
         with open(manifestPath, "a") as f: 
             f.write("\n" + jsonString) 
             
-    #clean the file and write the parquet file into data/processed/sessions 
-    cleanData(jsonPath, parquetPath)
+    #convert the file to parquet
+    try: 
+        df.to_parquet(parquetPath)
+        print(f"{file} parquet conversion succesful")
+    except Exception as e:
+        print(f"{file} parquet conversion failed ")
+
     
+
+
