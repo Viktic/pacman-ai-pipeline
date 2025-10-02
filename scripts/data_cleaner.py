@@ -1,9 +1,11 @@
 import pandas as pd
 import featuretools as ft
+from featuretools import calculate_feature_matrix
 import numpy as np
 import os
 import json
 import pyarrow 
+import joblib
 
 Index = {
     (0 , 0): 0,
@@ -25,20 +27,21 @@ oppositeIndex = {
 
 dirPath = os.path.dirname(os.path.realpath(__file__))
 rawSessionsPath = os.path.normpath(os.path.join(dirPath, "../../data/raw/sessions"))
+presetFeaturesPath = os.path.normpath(os.path.join(dirPath, "../model/features.joblib"))
 
 
 
 def cleanData(raw_path):
 
+    #load the preset Features
+    feature_defs = joblib.load(presetFeaturesPath)
 
-    
+
     #read the raw json data
     with open(raw_path) as f:
         raw = json.load(f)
 
     df = pd.json_normalize(raw["ticks"])
-
-    df.dropna()
 
     ticks = df["tick"].values
     score = df["score"].values
@@ -179,55 +182,16 @@ def cleanData(raw_path):
     )
 
 
-    #default aggregation primitives
-    default_agg_primitives = ["sum", "max", "min", "mean", "count"]
-
-    #deep feature synthesis (DFS)
-    features = ft.dfs(
-        entityset=es, 
-        target_dataframe_name="player",
-        agg_primitives=default_agg_primitives,
-        max_depth=2,
-        features_only=True
-    )
-
     #feature matrix
-    feature_matrix, feature_names = ft.dfs(
-        entityset=es, 
-        target_dataframe_name="player",
-        agg_primitives=default_agg_primitives,
-        max_depth=2,
-        features_only=False, 
-        verbose=True
+    feature_matrix = calculate_feature_matrix(
+        features = feature_defs,
+        entityset=es
     )
 
     feature_matrix = pd.DataFrame(feature_matrix)
 
-    #remove highly correlated features
-    feature_matrix, feature_names = ft.selection.remove_highly_correlated_features(
-        feature_matrix=feature_matrix, 
-        features=features
-        )
-
-    #drop useless features
-    feature_matrix.drop(columns=["ticks.COUNT(player)", 
-                        "ticks.COUNT(enemy)", 
-                        "ticks.MAX(enemy.enemy_id)", 
-                        "ticks.MAX(enemy.enemy_momentumIndex)", 
-                        "ticks.MEAN(enemy.enemy_id)",
-                        "ticks.MEAN(enemy.enemy_momentumIndex)", 
-                        "ticks.MIN(enemy.enemy_id)",
-                        "ticks.MIN(enemy.enemy_momentumIndex)",
-                        "ticks.MIN(enemy.posX)",
-                        "ticks.MIN(enemy.posY)",
-                        "ticks.MAX(enemy.posX)",
-                        "ticks.MAX(enemy.posY)",
-                        "ticks.SUM(enemy.enemy_id)",
-                        "ticks.MAX(enemy.player_dist)",
-                        "ticks.MEAN(enemy.player_dist)"
-                        ])
-
     return feature_matrix
+
 
 sessionsDir = rawSessionsPath
 
