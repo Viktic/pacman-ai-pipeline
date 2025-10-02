@@ -20,7 +20,14 @@ testSplit = []
 
 with open(processedSessionsManifestPath, "r") as f: 
     for line in f:
+
+        #skip empty lines
+        line = line.strip()
+        if line == "":
+            continue
+
         jsonObj = json.loads(line)
+
         session_id = int(jsonObj["session_id"])
         
         #distributed deterministic hash of session-IDs for better splitting 
