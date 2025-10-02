@@ -233,6 +233,11 @@ sessionsDir = rawSessionsPath
 
 manifestPath = os.path.normpath(os.path.join(dirPath, "../../data/processed/manifest.jsonl"))
 
+#create the empty processed-data manifest if does not yet exist
+if not os.path.exists(manifestPath):
+    open (manifestPath, "w").close()
+
+
 for file in os.listdir(sessionsDir):
     #skip hidden files in directory
     if file.startswith('.'):
@@ -255,14 +260,6 @@ for file in os.listdir(sessionsDir):
         print(f"{file} does not contain enough features -- file skipped")
         continue
 
-    #create processed-data-manifest if it does not already exist
-    if os.path.exists(manifestPath) == False: 
-        with open(manifestPath, "a") as f: 
-                data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
-                jsonString = json.dumps(data)
-                #only write into the file if the current session is not already in there 
-                f.write(jsonString)
-        continue
 
     #turn data into json-object
     data = {"session_id": session_id, "file_path": f"sessions/session_{session_id}.parquet"}
