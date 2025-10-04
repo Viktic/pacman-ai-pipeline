@@ -2,3 +2,4 @@ paths.json
 pipeline_venv/
 .DS_Store
 __pycache__/
+tests/
