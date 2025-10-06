@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import json
 import pandas as pd
-import ml_worker
+import feature_engineer 
 
 #gym.Env wrapper for PacMan game
 
@@ -42,7 +42,7 @@ class PacmanEnv(gym.Env):
         raw_df = pd.json_normalize(raw)
 
         #cleans the raw-data-snapshot
-        df = ml_worker.cleanData(raw_df)        
+        df = feature_engineer.cleanData(raw_df)        
 
         #turns the cleaned dataframe into a np-array 
         obs = np.array([
