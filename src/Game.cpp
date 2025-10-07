@@ -20,6 +20,7 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     m_gameRunning(true),
     m_gameInitialized(false),
     m_score(0),
+    m_reward(0),
     m_logGame(_logGame),
     //ASCII-grid-map 
     m_grid(
@@ -149,6 +150,9 @@ void Game::initialize() {
     //clear game first to avoid memory leaks 
     clearGame();
     
+    //REWARD FUNCTION: reset the reward score
+    m_reward = 0; 
+
     //initialize the logging session
     if (m_logGame == true) {
         m_pEventLogger->initializeSession();
@@ -242,7 +246,6 @@ void Game::render() {
     m_window.display();
 }
 
-
 //check collision between player and enemies 
 void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
 
@@ -278,6 +281,10 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
 
     //detect collision between player and enemy
     if (playerBounds.findIntersection(enemyBounds)) {
+
+        //REWARD FUNCTION: negative reward for coliding with enemy
+        m_reward -= 100; 
+
         m_gameRunning = false; 
         _player.resetMomentum();
     }
@@ -314,6 +321,10 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
     if (playerBounds.findIntersection(pelletBounds)) {
         _pellet.setPickedUpState(true);
         m_score++; 
+
+        //REWARD FUNCITON: positive reward for picking up a pellet
+        m_reward += 5;
+
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
             resetPellets(m_pPellets); 
@@ -352,7 +363,6 @@ void Game::run() {
           
             Player* pPlayer = Player::instance; 
 
-
             //inner game loop (handles the current game logic)
             while (m_gameRunning) { 
 
@@ -368,10 +378,7 @@ void Game::run() {
                 logData.m_tick = m_frameCount; 
                 //updates the movement for all entities and checks collision between player and enemies
                 
-                
                 for (size_t i = 0; i < m_pEntities.size(); ++i) {
-
-
 
                     //skip player to avoid self referring collision detection
                     if (m_pEntities[i].get() != pPlayer) {
@@ -379,7 +386,6 @@ void Game::run() {
                         //check pEnemy pointer after casting to avoid unexpected behaviour in case of unsuccessful cast
                         Enemy* pEnemy = dynamic_cast<Enemy*>(m_pEntities[i].get());
                         
-
                         if (pEnemy) {
 
                             //add the Enemy specific data to pLogData
@@ -410,13 +416,16 @@ void Game::run() {
                     
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
                 }
-
+                
                 //check collision between player and pellets
                 for (size_t i = 0; i < m_pPellets.size(); ++i) {
                     if (m_pPellets[i]->getPickedUpState() == false) {
                         checkCollisionPellet(*(pPlayer), *(m_pPellets[i].get()));
                     }
                 }
+                
+                //REWARD FUNCTION: decreases reward for time passing
+                m_reward -= 0.05f;
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -424,16 +433,22 @@ void Game::run() {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
-                //forward the gamestate to the ml-model every 60 frames
-                if (m_frameCount % 60 == 0 && m_frameCount != 0) {
+                //forward the gamestate to the ml-model every 60 frames or if the session is over
+                if ((m_frameCount % 60 == 0 && m_frameCount != 0) || m_gameRunning == false) {
+
+                    //logs the current reward score
+                    logData.m_reward = m_reward;
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
 
-                    pPlayer->recieveInput(predictedBuffer);
+                    //DEBUGGING ONLY
+                    //pPlayer->recieveInput(predictedBuffer);
                 }
-
-                    
+    
                 render();
                 m_frameCount++; 
+
+
+
             }
         }
 

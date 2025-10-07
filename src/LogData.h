@@ -9,13 +9,14 @@
 
 //struct that contains all the datapoints for logging
 struct LogData {
-	sf::Vector2f m_playerScreenPosition; //
-	std::vector<sf::Vector2f> m_enemyScreenPositions; //
-	sf::Vector2i m_playerGridPosition; //
-	std::vector<sf::Vector2i> m_enemyGridPositions;  //
-	sf::Vector2f m_playerMomentum; //
-	std::vector<sf::Vector2f> m_enemyMomenta; //
-	sf::Vector2f m_playerBuffer; //
+	sf::Vector2f m_playerScreenPosition; 
+	std::vector<sf::Vector2f> m_enemyScreenPositions; 
+	sf::Vector2i m_playerGridPosition; 
+	std::vector<sf::Vector2i> m_enemyGridPositions;  
+	sf::Vector2f m_playerMomentum; 
+	std::vector<sf::Vector2f> m_enemyMomenta; 
+	sf::Vector2f m_playerBuffer; 
 	int m_score; 
+	float m_reward; 
 	unsigned long m_tick; 
 };
