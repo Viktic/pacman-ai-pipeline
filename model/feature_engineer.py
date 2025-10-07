@@ -1,11 +1,9 @@
-import sys
-import json
+
 import pandas as pd
 import joblib
 import os
 import featuretools as ft
 import numpy as np
-import warnings
 from featuretools import calculate_feature_matrix
 
 
@@ -40,7 +38,6 @@ OPPOSITE_MOMENTUM_INDEX = {
 
 def cleanData(df):
 
-    df = pd.json_normalize(df["ticks"])
 
     #relational schemes for feature extraction
 
@@ -174,14 +171,7 @@ def cleanData(df):
         entityset=es
     )
 
-    #supress ft warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=FutureWarning)
-        #extracts complex features from the input-data
-        feature_matrix = calculate_feature_matrix(
-            features = feature_defs,
-            entityset=es
-        )
+
         
     return feature_matrix
 
@@ -189,17 +179,3 @@ def cleanData(df):
 
 
 
-for line in sys.stdin: 
-
-    snapshot = json.loads(line)
-    
-    #writes snapshot into dataframe
-    df = pd.json_normalize(snapshot)
-    
-    #cleans the dataframe
-    df = cleanData(df)
-
-    #gets the model prediction 
-    pred = model.predict(df) 
-
-    print(pred, flush=True)
