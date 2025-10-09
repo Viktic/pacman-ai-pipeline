@@ -461,7 +461,17 @@ void Game::run() {
                     //DEBUGGING ONLY
                     std::cout << predictedBuffer.x << " , " << predictedBuffer.y << std::endl; 
 
+                    //if model answer contained the reset signal (-1.0f, -1.0f), reset the Game
+                    if (predictedBuffer == sf::Vector2f(-1.0f, -1.0f)) {
+                        m_gameInitialized = false;
+                        m_gameRunning = true;
+                        m_score = 0;
+                        //leaves the inner game-loop to trigger reset
+                        break;
+                    }
+
                     //DEBUGGING ONLY
+
                     //pPlayer->recieveInput(predictedBuffer);
                 }
     
