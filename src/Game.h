@@ -54,6 +54,8 @@ private:
     //hash set which contains the grid coordinates of all valid crossings
     std::unordered_set<sf::Vector2i, tool::sfVector2iHash> m_crossings;
 
+    bool m_terminated;
+    bool m_truncated;
     float m_reward;
     int m_score; 
     float m_tileSize;

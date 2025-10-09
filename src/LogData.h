@@ -19,4 +19,6 @@ struct LogData {
 	int m_score; 
 	float m_reward; 
 	unsigned long m_tick; 
+	bool m_done;
+	bool m_truncated; 
 };

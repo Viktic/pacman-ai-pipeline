@@ -244,7 +244,9 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
 		{"player_buffer", {_data.m_playerBuffer.x, _data.m_playerBuffer.y}},
 		{"score", _data.m_score},
-		{"reward", _data.m_reward}
+		{"reward", _data.m_reward},
+		{"truncated", _data.m_truncated},
+		{"done", _data.m_done}
 	};
 
 	for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
