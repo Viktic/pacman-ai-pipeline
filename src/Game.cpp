@@ -323,7 +323,7 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
         m_score++; 
 
         //REWARD FUNCITON: positive reward for picking up a pellet
-        m_reward += 5;
+        m_reward += 1;
 
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
@@ -425,7 +425,7 @@ void Game::run() {
                 }
                 
                 //REWARD FUNCTION: decreases reward for time passing
-                m_reward -= 0.05f;
+                m_reward -= 0.001f;
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -439,6 +439,9 @@ void Game::run() {
                     //logs the current reward score
                     logData.m_reward = m_reward;
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
+                    
+                    //DEBUGGING ONLY
+                    std::cout << predictedBuffer.x << " , " << predictedBuffer.y << std::endl; 
 
                     //DEBUGGING ONLY
                     //pPlayer->recieveInput(predictedBuffer);

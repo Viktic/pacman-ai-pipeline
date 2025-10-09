@@ -21,7 +21,7 @@ public:
 	void initializeSession();
 	void gatherLogData(LogData& _data); 
 	void writeLogData();
-	sf::Vector2f forwardLogData(LogData& _data);
+	sf::Vector2f forwardLogData(LogData& _data); 
 	void closeSession(); 
 	~EventLogger();
 

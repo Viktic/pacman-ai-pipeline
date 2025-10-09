@@ -65,7 +65,7 @@ EventLogger::EventLogger() :
 	si.hStdOutput = hStdoutWrite;
 	si.hStdError = hStdoutWrite;
 
-	std::string cmd = "C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/pipeline_venv/Scripts/python.exe " + ml_workerPath;
+	std::string cmd = "C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/pipeline_venv/Scripts/python.exe -u " + ml_workerPath;
 	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
 		std::cerr << "Failed to start Python process!" << std::endl;
 	}
@@ -243,7 +243,8 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 		{"player_position_grid", {_data.m_playerGridPosition.x, _data.m_playerGridPosition.y}},
 		{"player_momentum", {_data.m_playerMomentum.x, _data.m_playerMomentum.y}},
 		{"player_buffer", {_data.m_playerBuffer.x, _data.m_playerBuffer.y}},
-		{"score", _data.m_score}
+		{"score", _data.m_score},
+		{"reward", _data.m_reward}
 	};
 
 	for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
@@ -279,6 +280,8 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 	//convert the predicted direction into a valid direction vector
 	sf::Vector2f hashedDirection = tool::translationMap[response];
 	
+
+
 	return hashedDirection;
 }
 
