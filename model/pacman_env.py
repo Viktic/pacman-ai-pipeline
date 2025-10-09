@@ -18,7 +18,6 @@ class PacmanEnv(gym.Env):
 
         super().__init__()
 
-
         #observation space (input range of values)
         self.observation_space = spaces.Box (
 
@@ -109,7 +108,10 @@ class PacmanEnv(gym.Env):
         timeout = 1.0
         start = time.time()
     
+        #timeout for C++ sending actions
         while time.time() - start < timeout:
+
+            #gets the last observation (threadsafe)
             with self._observation_lock:
                 if self._latest_observation is not None:
                     obs = self._latest_observation
@@ -123,25 +125,28 @@ class PacmanEnv(gym.Env):
         reward = raw.get("reward", 0.0)
         #extracts the terminated-flag from the C++ response (default: False)
         terminated = raw.get("done", False)
-        #exctracts the truncated-flag from the C++ response (default: False)
+        #extracts the truncated-flag from the C++ response
         truncated = raw.get("truncated", False)
+
         #information to evaluate agents performance (metric: score)
         info = {"score": raw.get("score", 0)}
 
-        return obs, reward, terminated, truncated, info
+        return obs, reward, truncated, terminated, info
 
     #resets the environment
     def reset(self, seed=None, options=None):
 
         #sends a restart signal to the C++ env
-        print("RESET", flush=True)
+        print("[-1]", flush=True)
 
+        #gets the latest observation (threadsafe)
         with self._observation_lock:
             if self._latest_observation is None:
                 
                 timeout = 5.0
                 start = time.time()
 
+                #timeout for C++ sending actions
                 while time.time() - start < timeout: 
                     time.sleep(0.01)
                     if self._latest_observation is not None:
