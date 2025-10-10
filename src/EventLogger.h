@@ -31,8 +31,6 @@ private:
 	HANDLE m_hStdoutRead;
 	PROCESS_INFORMATION m_pi;
 	bool m_pythonProcessRunning;
-
-
 	nlohmann::json m_session; 
 	std::fstream m_sessionStream; 
 	std::string m_rawDataDir; 

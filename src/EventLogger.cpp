@@ -283,7 +283,6 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 	sf::Vector2f hashedDirection = tool::translationMap[response];
 	
 
-
 	return hashedDirection;
 }
 
