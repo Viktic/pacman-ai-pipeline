@@ -8,7 +8,6 @@ class PacmanEnv():
 
     #constructor
     def __init__(self):
-        
         pass
 
     #translate the raw observation into a valid observation-format
@@ -34,7 +33,7 @@ class PacmanEnv():
         return obs
 
     def _step(self, line):
-
+        
         #clean the input line
         line = line.strip()
         if not line:
@@ -49,19 +48,11 @@ class PacmanEnv():
         done = raw_data.get("done")
         truncated = raw_data.get("truncated")
 
-        with open("C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/comm_debug.txt", "a") as f:
-            f.write(f"terminated: {done}, truncated: {truncated}" + "\n")
-
         #automatically reset the game if truncated or terminated
-        if done or truncated: 
-            with open("C:/Users/vikto/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/comm_debug.txt", "a") as f:
-                f.write(f"sending restart signal to C++" + "\n")
-
-            print([-1], flush=True)
-    
+        if done or truncated:
+            print("[-1]", flush=True)
         else:
-            #DEBUGGING ONLY: score bounce back
-            print([0], flush=True)
+            #score bounce back
+            print("[0]", flush=True)
 
         return done, truncated
-
