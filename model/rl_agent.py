@@ -11,7 +11,7 @@ class Agent():
                 
         model_path = "Ql_model.joblib"
         #start with high initial epsilon for maximum exploration 
-        self.epsilon = 1
+        self.epsilon = 0.7
 
         #------ initialize the Q-Learning Model ------
         if os.path.exists(model_path):
@@ -25,12 +25,17 @@ class Agent():
         p = random.random()
         
         if p > self.epsilon: 
-            #exploit (query the Ql-model with the current observed state)
-            obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
-            action = np.argmax(self.Ql_model(obs_tensor))
+          
+            #ensure correct tensor shape
+            obs_tensor = torch.tensor(obs, dtype=torch.float32).T
+
+            #queries the ql-network 
+            with torch.no_grad():
+                q_values = self.Ql_model(obs_tensor)
+            
+            action = torch.argmax(q_values).item()
         else: 
-            #explore (select a random action)
-            action = random.randint(0,4)
-            pass   
+            #explore
+            action = random.randint(0, 4)
 
         return action
