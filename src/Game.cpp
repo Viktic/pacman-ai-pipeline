@@ -469,7 +469,7 @@ void Game::run() {
           
                     //DEBUGGING ONLY
              
-                    //pPlayer->recieveInput(predictedBuffer);
+                    pPlayer->recieveInput(predictedBuffer);
                 }
     
                 render();
