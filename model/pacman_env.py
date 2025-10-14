@@ -9,7 +9,7 @@ class PacmanEnv():
     #constructor
     def __init__(self):
         pass
-
+    
     #translate the raw observation into a valid observation-format
     def _translate_obs(self, raw): 
 
@@ -17,7 +17,7 @@ class PacmanEnv():
 
         #cleans the raw-data-snapshot
         df = feature_engineer.cleanData(raw_df)        
-
+        
         #turns the cleaned dataframe into a np-array 
         obs = np.array([
             df["tick"],
