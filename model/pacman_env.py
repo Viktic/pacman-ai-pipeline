@@ -3,7 +3,7 @@ import feature_engineer
 import numpy as np
 import json
 import replay_buffer
-import agent
+import rl_agent
 
 
 class PacmanEnv(): 
@@ -15,7 +15,7 @@ class PacmanEnv():
         self.replay_buffer = replay_buffer.ReplayBuffer(10000)
 
         #creates an agent instance
-        self.agent = agent.Agent()
+        self.agent = rl_agent.Agent()
 
         self.previous_state = None
         self.current_state = None
