@@ -1,12 +1,8 @@
 
 import pandas as pd
-import os
 import numpy as np
 
 
-dirPath = os.path.dirname(os.path.realpath(__file__))
-model_path = os.path.normpath(os.path.join(dirPath, "model.joblib"))
-presetFeaturesPath = os.path.normpath(os.path.join(dirPath, "features.joblib"))
 
 
 #momentum-index translation table
@@ -27,13 +23,27 @@ OPPOSITE_MOMENTUM_INDEX = {
 }
 
 
+#normalization constants
+game_width = 1280
+game_height = 880
+
+def encode_direction(dir_index): 
+    vec = np.zeros(5)
+    vec[int(dir_index)] = 1.0
+    return vec
+
+
 def cleanData(df):
 
     df = df.dropna()
 
-    #split the player screen position coordinates into sepearate columns
-    player_posX = df["player_position_screen"].str[0]
-    player_posY = df["player_position_screen"].str[1]
+    #extract the player screen position coordinates
+    player_pos = df["player_position_screen"].iloc[0]
+    
+    #normalize player positions
+    player_posX = float(player_pos[0]) / game_width
+    player_posY = float(player_pos[1]) / game_height
+    
 
     #convert the player momentum into its corresponding index
     player_momentum = df["player_momentum"][0]
@@ -47,16 +57,15 @@ def cleanData(df):
 
     for c in enemy_positions.columns:
         
-        px = enemy_positions[c][0][0]
-        py = enemy_positions[c][0][1]
+        px = enemy_positions[c][0][0] / game_width
+        py = enemy_positions[c][0][1] / game_height
 
         #calculate the distance between the enemy and the player coordinate wise
         dx = px - player_posX
         dy = py - player_posY
 
-        distance = float(np.hypot(dx, dy))
-
-        df[f"enemy{c}_distance"] = distance
+        #lies in [0, sqrt(2)] therefore normalization 
+        distance = float(np.hypot(dx, dy)) / np.sqrt(2)
 
         distances.append(distance)
 
@@ -78,23 +87,29 @@ def cleanData(df):
 
         momenta.append(float(mIndex == comp))
 
-    #1.0 means player and enemy ar moving towards each other 
+    #1.0 means player and enemy are moving towards each other 
     opposite_direction = max(momenta)
 
-    vals = {
-        "tick" : df["tick"],
-        "player_posX" : player_posX,
-        "player_posY" : player_posY,
-        "player_momentumIndex" : player_momentumIndex, 
-        "min_enemy_distance" : min_enemy_distance,
-        "opposite_direction" : opposite_direction,
-        "enemy0_distance": df["enemy0_distance"],
-        "enemy1_distance": df["enemy1_distance"],
-        "enemy2_distance": df["enemy2_distance"],
-    }
 
-    #return dataframe with aggregated features
-    final_features = pd.DataFrame(data=vals)
+
+    vals = {
+        "player_posX" : player_posX, # norm 
+        "player_posY" : player_posY, # norm 
+        "min_enemy_distance" : min_enemy_distance, # norm 
+        "opposite_direction" : opposite_direction, # norm 
+        "enemy0_distance": distances[0], # norm 
+        "enemy1_distance": distances[1], # norm 
+        "enemy2_distance": distances[2], # norm 
+    }
+    #one-hot encoding for player momentum
+    player_momentum_vec = encode_direction(player_momentumIndex)
+    
+    for i in range(5): 
+        vals[f"player_momentum{i}"] = player_momentum_vec[i]
+
+    #builds np.array with final features
+    final_features = np.array(list(vals.values()), dtype=np.float32)
+
     return final_features
 
 

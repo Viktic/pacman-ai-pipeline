@@ -25,10 +25,10 @@ class Agent():
 
         #------ initialize the Q-Learning Models ------
         #policy network (used for queries)
-        self.policy_model = DeepQl_model.NeuralNetwork(9, 5)
+        self.policy_model = DeepQl_model.NeuralNetwork(12, 5)
         
         #target network (gets trained in the background)
-        self.target_model = DeepQl_model.NeuralNetwork(9,5)
+        self.target_model = DeepQl_model.NeuralNetwork(12,5)
 
         #loads the params of an already trained policy model if it exists
         if os.path.exists(self.policy_network_path):
@@ -46,7 +46,7 @@ class Agent():
         self.target_model.load_state_dict(self.policy_model.state_dict())
     
         #optimizer for the model backpropagation
-        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=2.5e-4)
+        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=5e-4)
 
 
     def sync_target_net(self):
@@ -70,7 +70,7 @@ class Agent():
         if p > self.epsilon: 
           
             #ensure correct tensor shape
-            obs_tensor = torch.tensor(obs, dtype=torch.float32).T
+            obs_tensor = torch.tensor(obs, dtype=torch.float32)
 
             #queries the ql-network 
             with torch.no_grad():
@@ -87,7 +87,7 @@ class Agent():
         if self.epsilon > self.epsilon_end:
             self.epsilon *= self.epsilon_decay
 
-    def train_step(self, batch_size, gamma=0.99):
+    def train_step(self, batch_size, gamma=0.95):
         #check buffer length
         if self.replay_buffer.__len__() < batch_size: 
             return
