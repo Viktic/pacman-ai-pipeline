@@ -25,20 +25,7 @@ class PacmanEnv():
         raw_df = pd.json_normalize(raw)
 
         #cleans the raw-data-snapshot
-        df = feature_engineer.cleanData(raw_df)        
-        
-        #turns the cleaned dataframe into a np-array 
-        obs = np.array([
-            df["tick"],
-            df["player_posX"],
-            df["player_posY"],
-            df["player_momentumIndex"],
-            df["min_enemy_distance"],
-            df["opposite_direction"],
-            df["enemy0_distance"],
-            df["enemy1_distance"],
-            df["enemy2_distance"]
-        ], dtype=np.float32)
+        obs = feature_engineer.cleanData(raw_df)        
         return obs
 
     def _step(self, line):
@@ -83,7 +70,7 @@ class PacmanEnv():
             self.agent.save_model()
 
 
-        self.agent.train_step(64)
+        self.agent.train_step(128)
 
 
         #agent selects an action by querying the ql-network
