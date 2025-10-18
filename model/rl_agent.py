@@ -7,6 +7,9 @@ import torch
 import replay_buffer
 from torch import nn
 import torch.optim as optim
+import logging
+
+
 
 class Agent():
 
@@ -19,7 +22,10 @@ class Agent():
         #start with high initial epsilon for maximum exploration 
         self.epsilon_start = 1.0
         self.epsilon_end = 0.05
-        self.epsilon_decay = 0.9995
+        self.epsilon_decay = 0.999
+
+        #DEBUGGING
+        self.losses = []
 
         self.epsilon = self.epsilon_start
 
@@ -33,14 +39,12 @@ class Agent():
         #loads the params of an already trained policy model if it exists
         if os.path.exists(self.policy_network_path):
             #DEBUGGING
-            debugging_file = "/Users/viktorbrandmaier/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/python_worker_debug.log"
-            with open(debugging_file, "a") as f:
-                f.write("loading existing model")
-
+            logging.info("COMM: loading existing model")
+            
             checkpoint = torch.load(self.policy_network_path, weights_only=False)
             self.policy_model.load_state_dict(checkpoint["model_state_dict"])
             self.epsilon = checkpoint["epsilon"]
-
+            self.losses = checkpoint["losses"]
 
         #syncs the target network with the policy network 
         self.target_model.load_state_dict(self.policy_model.state_dict())
@@ -62,22 +66,36 @@ class Agent():
             obs,
             done
         )
+        #DEBUGGING OUTPUT
+        logging.debug(f"replay_buffer_size: {self.replay_buffer.__len__()}")
 
     def select_action(self, obs):
         #generate a random p-value for the epsilon-greedy algorithm
         p = random.random()
         
+        #DEBUGGING OUTPUT: 
+        logging.debug(f"AGENT: current epsilon: {self.epsilon}")
+
         if p > self.epsilon: 
           
-            #ensure correct tensor shape
             obs_tensor = torch.tensor(obs, dtype=torch.float32)
+
+            #DEBUGGING OUTPUT:
+            logging.debug(f"QUERY: obs_tensor_shape: {obs_tensor.shape}")
 
             #queries the ql-network 
             with torch.no_grad():
                 q_values = self.policy_model(obs_tensor)
             
+            #DEBUGGING OUTPUT:
+            propabilities = torch.softmax(q_values, dim=-1)
+            logging.debug(f"QUERY: model_output_propabs: {propabilities}")
+
             action = torch.argmax(q_values).item()
+            #DEBUGGING OUTPUT:
+            logging.info(f"QUERY: selected action: {action}")
         else: 
+
             #explore
             action = random.randint(0, 4)
 
@@ -87,7 +105,7 @@ class Agent():
         if self.epsilon > self.epsilon_end:
             self.epsilon *= self.epsilon_decay
 
-    def train_step(self, batch_size, gamma=0.95):
+    def train_step(self, batch_size, gamma=0.99):
         #check buffer length
         if self.replay_buffer.__len__() < batch_size: 
             return
@@ -96,36 +114,44 @@ class Agent():
 
         #convert the batch samples into tensors
         states = torch.tensor(states, dtype=torch.float32).reshape(states.shape[0], -1)
-
-
         actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
         rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
         next_states = torch.tensor(next_states, dtype=torch.float32).reshape(next_states.shape[0], -1)
         dones = torch.tensor(done, dtype=torch.float32).unsqueeze(1)
+        
 
         #gets the Q(s, a) from the policy model
-        q_values = self.policy_model(states).gather(1, actions) 
+        q_values = self.policy_model(states).gather(dim=1, index=actions) 
 
         with torch.no_grad():
             next_q_values = self.target_model(next_states).max(1)[0].unsqueeze(1)
-
+            
             #bellman equation for target q-values
             target_q_values = rewards + gamma * next_q_values * (1 - dones)
 
+
+
         #calculates loss
-        loss = nn.MSELoss()(q_values, target_q_values)
+        loss = nn.HuberLoss()(q_values, target_q_values)
+        self.losses.append(loss)
+
+        #DEBUGGING OUTPUT:
+        logging.debug(f"TRAINING: loss: {loss}")
 
         #backpropagation
-        self.optimizer.zero_grad() 
-        loss.backward()
+        self.optimizer
+        #gradient clipping
+        torch.nn.utils.clip_grad_norm_(self.policy_model.parameters(), max_norm=1.0)
         self.optimizer.step()
         
+
 
     def save_model(self):
 
         checkpoint = {
             "model_state_dict" : self.policy_model.state_dict(),
             "epsilon" : self.epsilon,
+            "losses": self.losses,
         }
 
         torch.save(checkpoint, self.policy_network_path)

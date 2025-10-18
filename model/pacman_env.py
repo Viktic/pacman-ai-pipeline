@@ -3,6 +3,7 @@ import feature_engineer
 import numpy as np
 import json
 import rl_agent
+import logging
 
 
 class PacmanEnv(): 
@@ -16,6 +17,9 @@ class PacmanEnv():
         self.previous_state = None
         self.current_state = None
         self.previous_action = None
+        self.batch_size = 128
+        self.train_freq = 4
+        self.update_freq = 1
         
         self.step_count = 0
     
@@ -54,23 +58,21 @@ class PacmanEnv():
                 done
             )
         
-        #DEBUGGING ONLY 
-        if self.step_count % 50 == 0 and not (self.step_count % 1000 == 0):
-            with open("/Users/viktorbrandmaier/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/python_worker_debug.log", "a") as f: 
-                f.write(str(self.step_count) + "\n")
+
 
         #sync the target policy and target net every 1000 steps
         if self.step_count > 0 and self.step_count % 1000 == 0: 
-            #DEBUGGING ONLY
-            with open("/Users/viktorbrandmaier/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/python_worker_debug.log", "a") as f: 
-                f.write("trying to save model checkpoint")
-            
-            self.agent.sync_target_net()
-            #TESTING ONLY: 
+            #DEBUGGING output:
+            logging.info(f"COMM: saving model...")
             self.agent.save_model()
 
 
-        self.agent.train_step(128)
+
+        if self.agent.replay_buffer.__len__() >= self.batch_size and self.step_count % self.train_freq == 0:
+            self.agent.train_step(64)
+
+            if self.step_count % self.update_freq == 0: 
+                self.agent.sync_target_net()
 
 
         #agent selects an action by querying the ql-network
@@ -86,6 +88,10 @@ class PacmanEnv():
             self.previous_state = None
             print("[-1]", flush=True)
         else:
+            
+            #DEBUGGING output: 
+            #logging.debug(f"COMM: sending action: {action} to env")
+
             #action bounce back
             print(f"[{action}]", flush=True)
 
