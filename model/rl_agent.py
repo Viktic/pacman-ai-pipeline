@@ -105,7 +105,7 @@ class Agent():
         if self.epsilon > self.epsilon_end:
             self.epsilon *= self.epsilon_decay
 
-    def train_step(self, batch_size, gamma=0.99):
+    def train_step(self, batch_size, gamma=0.95):
         #check buffer length
         if self.replay_buffer.__len__() < batch_size: 
             return

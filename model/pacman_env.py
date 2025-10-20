@@ -48,6 +48,10 @@ class PacmanEnv():
         done = raw_data.get("done")
         truncated = raw_data.get("truncated")
 
+        #DEBUGGING output:
+        logging.debug(f"REWARD: {reward}")
+
+
         #adds the transition tuple to the replay buffer 
         if self.previous_state is not None and self.previous_action is not None:
             self.agent.replay_buffer_add(
