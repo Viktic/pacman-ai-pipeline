@@ -19,7 +19,7 @@ class PacmanEnv():
         self.previous_action = None
         self.batch_size = 128
         self.train_freq = 4
-        self.update_freq = 1
+        self.update_freq = 1000
         
         self.step_count = 0
     
@@ -73,7 +73,7 @@ class PacmanEnv():
 
 
         if self.agent.replay_buffer.__len__() >= self.batch_size and self.step_count % self.train_freq == 0:
-            self.agent.train_step(64)
+            self.agent.train_step(self.batch_size)
 
             if self.step_count % self.update_freq == 0: 
                 self.agent.sync_target_net()
@@ -99,9 +99,11 @@ class PacmanEnv():
             #action bounce back
             print(f"[{action}]", flush=True)
 
+        #reduces the agents epsilon rate every 10 steps
+        if self.step_count % 60 == 0: 
+            self.agent.reduce_epsilon()
+
         #increases the step count
         self.step_count += 1
-        #reduces the agents epsilon rate
-        self.agent.reduce_epsilon()
 
         return done, truncated

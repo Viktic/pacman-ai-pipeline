@@ -16,7 +16,7 @@ class Agent():
     def __init__(self):
 
         #creates a replay buffer instance with capacity 10.000
-        self.replay_buffer = replay_buffer.ReplayBuffer(10000)
+        self.replay_buffer = replay_buffer.ReplayBuffer(50000)
 
         self.policy_network_path = "policy_model_params.pth"
         #start with high initial epsilon for maximum exploration 
@@ -31,10 +31,10 @@ class Agent():
 
         #------ initialize the Q-Learning Models ------
         #policy network (used for queries)
-        self.policy_model = DeepQl_model.NeuralNetwork(12, 5)
+        self.policy_model = DeepQl_model.NeuralNetwork(18, 5)
         
         #target network (gets trained in the background)
-        self.target_model = DeepQl_model.NeuralNetwork(12,5)
+        self.target_model = DeepQl_model.NeuralNetwork(18,5)
 
         #loads the params of an already trained policy model if it exists
         if os.path.exists(self.policy_network_path):
@@ -50,7 +50,7 @@ class Agent():
         self.target_model.load_state_dict(self.policy_model.state_dict())
     
         #optimizer for the model backpropagation
-        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=5e-4)
+        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=1e-3)
 
 
     def sync_target_net(self):
@@ -139,11 +139,11 @@ class Agent():
         logging.debug(f"TRAINING: loss: {loss}")
 
         #backpropagation
-        self.optimizer
-        #gradient clipping
+        self.optimizer.zero_grad()  
+        loss.backward()  
+        #gradient clipping      
         torch.nn.utils.clip_grad_norm_(self.policy_model.parameters(), max_norm=1.0)
         self.optimizer.step()
-        
 
 
     def save_model(self):
