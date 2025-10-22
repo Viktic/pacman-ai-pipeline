@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 
@@ -69,6 +68,17 @@ def cleanData(df):
 
         distances.append(distance)
 
+
+    #relative enemy position vector
+    enemy_rel = []
+    for c in enemy_positions.columns:
+        px = enemy_positions[c][0][0] / game_width
+        py = enemy_positions[c][0][1] / game_height
+        dx = px - player_posX
+        dy = py - player_posY
+        enemy_rel.extend([dx, dy])
+
+
     #get the minimum enemy-player distance
     min_enemy_distance = min(distances)
 
@@ -90,29 +100,27 @@ def cleanData(df):
     #1.0 means player and enemy are moving towards each other 
     opposite_direction = max(momenta)
 
-
-
-    vals = {
-        "player_posX" : player_posX, # norm 
-        "player_posY" : player_posY, # norm 
-        "min_enemy_distance" : min_enemy_distance, # norm 
-        "opposite_direction" : opposite_direction, # norm 
-        "enemy0_distance": distances[0], # norm 
-        "enemy1_distance": distances[1], # norm 
-        "enemy2_distance": distances[2], # norm 
-    }
+    # Build feature list in guaranteed order (instead of dictionary)
+    vals = [
+        player_posX,           # norm 
+        player_posY,           # norm 
+        min_enemy_distance,    # norm 
+        opposite_direction,    # norm 
+        distances[0],          # enemy0_distance norm 
+        distances[1],          # enemy1_distance norm 
+        distances[2],          # enemy2_distance norm 
+    ]
+    
     #one-hot encoding for player momentum
     player_momentum_vec = encode_direction(player_momentumIndex)
     
-    for i in range(5): 
-        vals[f"player_momentum{i}"] = player_momentum_vec[i]
+    # Add player momentum features (5 features)
+    vals.extend(player_momentum_vec.tolist())
 
+    # Add relative enemy positions (6 features: dx, dy for each enemy)
+    vals.extend(enemy_rel)
+        
     #builds np.array with final features
-    final_features = np.array(list(vals.values()), dtype=np.float32)
+    final_features = np.array(vals, dtype=np.float32)
 
     return final_features
-
-
-
-
-
