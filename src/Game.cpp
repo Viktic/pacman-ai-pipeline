@@ -287,7 +287,7 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
 
         //REWARD FUNCTION: negative reward for coliding with enemy
-        m_reward -= 20;
+        m_reward -= 50;
 
         m_gameRunning = false; 
         m_terminated = true;
@@ -329,7 +329,7 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
         m_score++; 
 
         //REWARD FUNCITON: positive reward for picking up a pellet
-        m_reward += 1;
+        m_reward += 5;
 
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
@@ -442,7 +442,7 @@ void Game::run() {
                 }
 
                 //REWARD FUNCTION: decreases reward for time passing
-                m_reward -= 0.02f;
+                m_reward -= 0.001f;
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -451,7 +451,7 @@ void Game::run() {
                 }
 
                 //forward the gamestate to the ml-model every 60 frames, if the session is over or if the player has collected a pellet
-                if ((m_frameCount % 60 == 0 && m_frameCount != 0) || m_gameRunning == false || scoreStamp < m_score) {
+                if (true) {
 
                     //logs the current reward score
                     logData.m_reward = m_reward;
@@ -460,21 +460,21 @@ void Game::run() {
                     logData.m_truncated = m_truncated;
 
                     //log the terminated flag
-                    logData.m_done = m_terminated; 
+                    logData.m_done = m_terminated;
 
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
 
-   
+
                     if (predictedBuffer == sf::Vector2f(-1.0f, -1.0f)) {
                         m_gameInitialized = false;
                         m_score = 0;
-                        m_gameRunning = true; 
+                        m_gameRunning = true;
                         //leaves the inner game-loop to trigger reset
                         break;
                     }
-          
+
                     //DEBUGGING ONLY
-             
+
                     pPlayer->recieveInput(predictedBuffer);
                 }
     
