@@ -24,7 +24,7 @@ OPPOSITE_MOMENTUM_INDEX = {
 
 #normalization constants
 game_width = 1280
-game_height = 880
+game_height = 880 
 
 def encode_direction(dir_index): 
     vec = np.zeros(5)

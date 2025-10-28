@@ -18,9 +18,11 @@ class PacmanEnv():
         self.current_state = None
         self.previous_action = None
         self.batch_size = 128
-        self.train_freq = 4
+        self.step_skip = 9
+        self.train_freq = 9
         self.update_freq = 1000
         
+        self.commulative_reward = 0
         self.step_count = 0
     
     #translate the raw observation into a valid observation-format
@@ -37,50 +39,52 @@ class PacmanEnv():
         #cleans the input line
         line = line.strip()
         if not line:
-            return
+            return False, False
 
         #extracts json from raw input
         raw_data = json.loads(line)
 
         #converts the json into observation format
         obs = self._translate_obs(raw_data)
-        reward = raw_data.get("reward")
-        done = raw_data.get("done")
-        truncated = raw_data.get("truncated")
+        reward = raw_data.get("reward", 0)
+        done = raw_data.get("done", False)
+        truncated = raw_data.get("truncated", False)
 
-        #DEBUGGING output:
-        logging.debug(f"REWARD: {reward}")
+        #DEBUGGING METRIC
+        self.commulative_reward += reward
 
-
-        #adds the transition tuple to the replay buffer 
-        if self.previous_state is not None and self.previous_action is not None:
-            self.agent.replay_buffer_add(
-                self.previous_state, 
-                self.previous_action, 
-                reward,
-                obs,
-                done
-            )
         
-
-
-        #sync the target policy and target net every 1000 steps
         if self.step_count > 0 and self.step_count % 1000 == 0: 
             #DEBUGGING output:
-            logging.info(f"COMM: saving model...")
+            #logging.info(f"COMM: saving model...")
             self.agent.save_model()
 
+        if self.step_count % self.step_skip == 0 or done or truncated: 
+
+            action = self.agent.select_action(obs)
+            
+            #adds the transition tuple to the replay buffer 
+            if self.previous_state is not None and self.previous_action is not None:
+                self.agent.replay_buffer_add(
+                    self.previous_state, 
+                    self.previous_action, 
+                    reward,
+                    obs,
+                    done
+                )
+        
+        else:
+            #selects the previous action until a new action has been queried
+            action = self.previous_action if self.previous_action is not None else 0
 
 
         if self.agent.replay_buffer.__len__() >= self.batch_size and self.step_count % self.train_freq == 0:
             self.agent.train_step(self.batch_size)
 
-            if self.step_count % self.update_freq == 0: 
-                self.agent.sync_target_net()
-
-
-        #agent selects an action by querying the ql-network
-        action = self.agent.select_action(obs)
+        #sync the target policy and target net
+        if self.step_count % self.update_freq == 0: 
+            self.agent.sync_target_net()
+            
 
         #updates the states
         self.previous_state = obs
@@ -90,7 +94,16 @@ class PacmanEnv():
         if done or truncated:
             self.previous_action = None
             self.previous_state = None
+            #reduces the agents epsilon rate every episode
+            self.agent.reduce_epsilon()
+
+            #DEBUGGING OUTPUT
+            logging.debug(f"reward: {self.commulative_reward}")
+            self.commulative_reward = 0
+
+
             print("[-1]", flush=True)
+
         else:
             
             #DEBUGGING output: 
@@ -99,9 +112,8 @@ class PacmanEnv():
             #action bounce back
             print(f"[{action}]", flush=True)
 
-        #reduces the agents epsilon rate every 10 steps
-        if self.step_count % 60 == 0: 
-            self.agent.reduce_epsilon()
+
+
 
         #increases the step count
         self.step_count += 1

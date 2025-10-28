@@ -1,6 +1,5 @@
 import os
 import DeepQl_model
-import joblib
 import random
 import numpy as np
 import torch
@@ -15,17 +14,16 @@ class Agent():
 
     def __init__(self):
 
-        #creates a replay buffer instance with capacity 10.000
+        #creates a replay buffer instance with capacity 50.000
         self.replay_buffer = replay_buffer.ReplayBuffer(50000)
 
         self.policy_network_path = "policy_model_params.pth"
         #start with high initial epsilon for maximum exploration 
         self.epsilon_start = 1.0
+        #epsilon range determines the number of episodes over which the epsilon decay takes place
+        self.epsilon_range = 1000
+        self.epsilon_decay = 1/self.epsilon_range        
         self.epsilon_end = 0.05
-        self.epsilon_decay = 0.999
-
-        #DEBUGGING
-        self.losses = []
 
         self.epsilon = self.epsilon_start
 
@@ -44,7 +42,6 @@ class Agent():
             checkpoint = torch.load(self.policy_network_path, weights_only=False)
             self.policy_model.load_state_dict(checkpoint["model_state_dict"])
             self.epsilon = checkpoint["epsilon"]
-            self.losses = checkpoint["losses"]
 
         #syncs the target network with the policy network 
         self.target_model.load_state_dict(self.policy_model.state_dict())
@@ -66,36 +63,23 @@ class Agent():
             obs,
             done
         )
-        #DEBUGGING OUTPUT
-        logging.debug(f"replay_buffer_size: {self.replay_buffer.__len__()}")
-
+      
     def select_action(self, obs):
         #generate a random p-value for the epsilon-greedy algorithm
         p = random.random()
         
-        #DEBUGGING OUTPUT: 
-        logging.debug(f"AGENT: current epsilon: {self.epsilon}")
-
         if p > self.epsilon: 
           
             obs_tensor = torch.tensor(obs, dtype=torch.float32)
-
-            #DEBUGGING OUTPUT:
-            logging.debug(f"QUERY: obs_tensor_shape: {obs_tensor.shape}")
 
             #queries the ql-network 
             with torch.no_grad():
                 q_values = self.policy_model(obs_tensor)
             
-            #DEBUGGING OUTPUT:
-            propabilities = torch.softmax(q_values, dim=-1)
-            logging.debug(f"QUERY: model_output_propabs: {propabilities}")
 
             action = torch.argmax(q_values).item()
-            #DEBUGGING OUTPUT:
-            logging.info(f"QUERY: selected action: {action}")
-        else: 
 
+        else: 
             #explore
             action = random.randint(0, 4)
 
@@ -103,9 +87,11 @@ class Agent():
 
     def reduce_epsilon(self):
         if self.epsilon > self.epsilon_end:
-            self.epsilon *= self.epsilon_decay
+            self.epsilon -= self.epsilon_decay
+        
+        logging.debug(f"current epsilon: {self.epsilon}")
 
-    def train_step(self, batch_size, gamma=0.95):
+    def train_step(self, batch_size, gamma=0.99):
         #check buffer length
         if self.replay_buffer.__len__() < batch_size: 
             return
@@ -133,11 +119,7 @@ class Agent():
 
         #calculates loss
         loss = nn.HuberLoss()(q_values, target_q_values)
-        self.losses.append(loss)
-
-        #DEBUGGING OUTPUT:
-        logging.debug(f"TRAINING: loss: {loss}")
-
+        
         #backpropagation
         self.optimizer.zero_grad()  
         loss.backward()  
@@ -151,7 +133,6 @@ class Agent():
         checkpoint = {
             "model_state_dict" : self.policy_model.state_dict(),
             "epsilon" : self.epsilon,
-            "losses": self.losses,
         }
 
         torch.save(checkpoint, self.policy_network_path)
