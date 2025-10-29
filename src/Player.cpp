@@ -12,8 +12,8 @@
 Player* Player::instance = nullptr; 
 
 //Player constructor
-Player::Player(const std::string& _textureFilePath, sf::Vector2f _spawnPosition) :
-    Entity(_textureFilePath, _spawnPosition),
+Player::Player(const sf::Texture& _texture, sf::Vector2f _spawnPosition) :
+    Entity(_texture ,_spawnPosition),
     m_speed(2.0f),
     m_momentum({ 0.0f,0.0f }),
     m_buffer({ 0.0f, 0.0f })

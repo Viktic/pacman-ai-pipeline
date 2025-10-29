@@ -50,7 +50,15 @@ m_tileSize(80){
 
 //constructs a new enemy with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
-    m_pEntities.emplace_back(std::make_unique<Enemy>(_filePath, _spawnPosition));
+
+    // Load texture only once and cache it
+    if (m_textureCache.find(_filePath) == m_textureCache.end()) {
+        if (!m_textureCache[_filePath].loadFromFile(_filePath)) {
+            std::cerr << "ERROR: Failed to load texture: " << _filePath << std::endl;
+            return;
+        }
+    }
+    m_pEntities.emplace_back(std::make_unique<Enemy>(m_textureCache[_filePath] ,_spawnPosition));
 }
 
 //constructs a new rectangle object
@@ -67,7 +75,16 @@ void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _co
 
 //constructs a new pellet with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition) {
-    m_pPellets.emplace_back(std::make_unique<Pellet>(_filePath, _spawnPosition));
+
+        //loads the pellet texture only once then caches it
+        if (m_textureCache.find(_filePath) == m_textureCache.end()) {
+        if (!m_textureCache[_filePath].loadFromFile(_filePath)) {
+            std::cerr << "ERROR: Failed to load texture: " << _filePath << std::endl;
+            return;
+        }
+    }
+
+    m_pPellets.emplace_back(std::make_unique<Pellet>(m_textureCache[_filePath], _spawnPosition));
 }
 
 //parses the game-map to find valid crossings
@@ -189,7 +206,16 @@ void Game::initialize() {
 
                 //initialize player instance
             case 'P': {
-                auto player = std::make_unique<Player>("sprites/HannesSprite.png", sf::Vector2f(px, py));
+
+                //loads the player texture only once then caches it
+                if (m_textureCache.find("sprites/HannesSprite.png") == m_textureCache.end()) {
+                    if (!m_textureCache["sprites/HannesSprite.png"].loadFromFile("sprites/HannesSprite.png")) {
+                        std::cerr << "ERROR: Failed to load player texture" << std::endl;
+                        break;
+                    }
+                }
+
+                auto player = std::make_unique<Player>(m_textureCache["sprites/HannesSprite.png"],sf::Vector2f(px, py));
 
                 //insert the player into the m_pEntities vector
                 Player::instance = player.get();
@@ -541,6 +567,8 @@ Game::~Game() {
         m_pEventLogger->closeSession(); 
     }
     clearGame();
+    //clears the texture cache only at the end of the program
+    m_textureCache.clear();
 }
 
 

@@ -54,6 +54,9 @@ private:
     //hash set which contains the grid coordinates of all valid crossings
     std::unordered_set<sf::Vector2i, tool::sfVector2iHash> m_crossings;
 
+    //texture cache for more efficient texture loading
+    std::unordered_map<std::string, sf::Texture> m_textureCache;
+
     bool m_terminated;
     bool m_truncated;
     float m_reward;

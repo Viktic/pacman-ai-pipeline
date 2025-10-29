@@ -277,7 +277,7 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
     pfd.fd = m_stdoutRead;
     pfd.events = POLLIN;
 
-    const int TIMEOUT_MS = 5000;
+    const int TIMEOUT_MS = 10000;
 
     while (true) {
         int pollResult = poll(&pfd, 1, TIMEOUT_MS);

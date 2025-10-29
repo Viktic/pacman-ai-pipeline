@@ -18,7 +18,7 @@ class Player: public Entity {
         //static global access-point to the player instance 
         static Player* instance;
 
-        Player(const std::string& _texturePath, sf::Vector2f _spawnPosition); 
+        Player(const sf::Texture& _texture,  sf::Vector2f _spawnPosition);
         void handleInput(sf::Keyboard::Key _key);
         void resetMomentum(); 
         void move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) override;
