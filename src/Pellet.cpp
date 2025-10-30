@@ -5,11 +5,12 @@
 #include "Pellet.h"
 #include "Game.h"
 
-//Pellet constructor
-Pellet::Pellet(const std::string& _textureFilePath, sf::Vector2f& _spawnPosition): 
-m_texture(_textureFilePath), 
-m_sprite(m_texture), 
-m_pickedUp(false) {
+// Pellet constructor - takes texture reference instead of loading it
+Pellet::Pellet(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
+	m_texture(_texture),
+	m_sprite(m_texture),
+	m_pickedUp(false)
+{
 	sf::FloatRect spriteBounds = getSprite().getGlobalBounds();
 	m_sprite.setPosition(_spawnPosition);
 	m_sprite.setOrigin({ spriteBounds.size.x * -0.25f, spriteBounds.size.y * -0.25f});

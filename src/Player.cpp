@@ -12,11 +12,12 @@
 Player* Player::instance = nullptr; 
 
 //Player constructor
-Player::Player(const std::string& _textureFilePath, sf::Vector2f _spawnPosition) :
-    Entity(_textureFilePath, _spawnPosition),
+Player::Player(const sf::Texture& _texture, sf::Vector2f _spawnPosition) :
+    Entity(_texture ,_spawnPosition),
     m_speed(2.0f),
     m_momentum({ 0.0f,0.0f }),
-    m_buffer({ 0.0f, 0.0f }) {
+    m_buffer({ 0.0f, 0.0f })
+ {
     getSprite().setPosition(_spawnPosition);
 }
 
@@ -33,10 +34,13 @@ sf::Vector2f& Player::getMomentum() {
 sf::Vector2f& Player::getBuffer() {
     return m_buffer; 
 }
+
+
  
 //handle the buffered-movement logic 
 void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
-    
+
+
     //current player position
     sf::Vector2f pos = getSprite().getPosition();
 
@@ -224,6 +228,7 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
     else {
         //inverse momentum when hitting a wall
         m_momentum *= -1.0f; 
+
     }
 }
 

@@ -9,10 +9,10 @@
 std::mt19937 Enemy::m_rng(std::random_device{}());
 
 //enemy constructor
-Enemy::Enemy(const std::string& _texturePath, sf::Vector2f _spawnPosition):
-m_speed(2.0f),
+Enemy::Enemy(const sf::Texture& _texture, sf::Vector2f _spawnPosition):
+m_speed(1.2f),
 m_momentum({0.0f, 0.0f}),
-Entity(_texturePath, _spawnPosition) {
+Entity(_texture, _spawnPosition) {
     getSprite().setColor(sf::Color::Red); 
 }
 

@@ -9,10 +9,10 @@
 
 
 //entitiy constructor
-Entity::Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition):
+Entity::Entity(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
 
 //in SMFL3 sprite needs to be initialized in the initializer list
-    m_texture(_filePath),
+    m_texture(_texture),
     m_sprite(m_texture)
  {
     m_sprite.setScale({0.05f, 0.05f});
@@ -26,7 +26,7 @@ sf::Sprite& Entity::getSprite() {
 
 //texture getter
 sf::Texture& Entity::getTexture() {
-    return m_texture;
+    return const_cast<sf::Texture&>(m_texture);
 }
 
 

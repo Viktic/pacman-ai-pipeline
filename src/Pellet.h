@@ -11,7 +11,7 @@ class Pellet {
 
 public:
 
-	Pellet(const std::string& _textureFilePath, sf::Vector2f& _spawnPosition);
+    Pellet(const sf::Texture& _texture, sf::Vector2f& _spawnPosition);
 	const sf::Texture& getTexture();
 	const sf::Sprite& getSprite(); 
 	bool getPickedUpState();
@@ -21,6 +21,6 @@ public:
 private:
 
 	bool m_pickedUp;
-	sf::Texture m_texture;
+	const sf::Texture& m_texture;
 	sf::Sprite m_sprite;
 };

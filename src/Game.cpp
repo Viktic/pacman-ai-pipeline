@@ -50,7 +50,15 @@ m_tileSize(80){
 
 //constructs a new enemy with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
-    m_pEntities.emplace_back(std::make_unique<Enemy>(_filePath, _spawnPosition));
+
+    // Load texture only once and cache it
+    if (m_textureCache.find(_filePath) == m_textureCache.end()) {
+        if (!m_textureCache[_filePath].loadFromFile(_filePath)) {
+            std::cerr << "ERROR: Failed to load texture: " << _filePath << std::endl;
+            return;
+        }
+    }
+    m_pEntities.emplace_back(std::make_unique<Enemy>(m_textureCache[_filePath] ,_spawnPosition));
 }
 
 //constructs a new rectangle object
@@ -67,7 +75,16 @@ void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _co
 
 //constructs a new pellet with unique_ptr ownership and places it in the m_pEntities vector
 void Game::addPellet(const std::string& _filePath, sf::Vector2f _spawnPosition) {
-    m_pPellets.emplace_back(std::make_unique<Pellet>(_filePath, _spawnPosition));
+
+        //loads the pellet texture only once then caches it
+        if (m_textureCache.find(_filePath) == m_textureCache.end()) {
+        if (!m_textureCache[_filePath].loadFromFile(_filePath)) {
+            std::cerr << "ERROR: Failed to load texture: " << _filePath << std::endl;
+            return;
+        }
+    }
+
+    m_pPellets.emplace_back(std::make_unique<Pellet>(m_textureCache[_filePath], _spawnPosition));
 }
 
 //parses the game-map to find valid crossings
@@ -189,7 +206,16 @@ void Game::initialize() {
 
                 //initialize player instance
             case 'P': {
-                auto player = std::make_unique<Player>("sprites/HannesSprite.png", sf::Vector2f(px, py));
+
+                //loads the player texture only once then caches it
+                if (m_textureCache.find("sprites/HannesSprite.png") == m_textureCache.end()) {
+                    if (!m_textureCache["sprites/HannesSprite.png"].loadFromFile("sprites/HannesSprite.png")) {
+                        std::cerr << "ERROR: Failed to load player texture" << std::endl;
+                        break;
+                    }
+                }
+
+                auto player = std::make_unique<Player>(m_textureCache["sprites/HannesSprite.png"],sf::Vector2f(px, py));
 
                 //insert the player into the m_pEntities vector
                 Player::instance = player.get();
@@ -287,7 +313,7 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
 
         //REWARD FUNCTION: negative reward for coliding with enemy
-        m_reward -= 100; 
+        m_reward -= 50;
 
         m_gameRunning = false; 
         m_terminated = true;
@@ -329,7 +355,7 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
         m_score++; 
 
         //REWARD FUNCITON: positive reward for picking up a pellet
-        m_reward += 1;
+        m_reward += 5;
 
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
@@ -374,7 +400,11 @@ void Game::run() {
             //inner game loop (handles the current game logic)
             while (m_gameRunning) {
 
+                //resets step reward
+                m_reward = 0.0f;
 
+                //take a score stamp before the player-pellet collision is checked
+                int scoreStamp = m_score;
 
                 //get player buffer before input
                 sf::Vector2f playerBufferStamp1 = pPlayer->getBuffer();
@@ -410,6 +440,8 @@ void Game::run() {
 
                             //detect collisions between player and enemy
                             checkCollisionEnemy(*pPlayer, *pEnemy);
+
+
                         }
                     }
                     else if (pPlayer && m_pEntities[i].get() == pPlayer) {
@@ -424,8 +456,8 @@ void Game::run() {
                         logData.m_playerBuffer = pPlayer->getBuffer();
 
                     }
-
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
+
                 }
 
                 //check collision between player and pellets
@@ -444,8 +476,8 @@ void Game::run() {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
-                //forward the gamestate to the ml-model every 60 frames or if the session is over
-                if ((m_frameCount % 60 == 0 && m_frameCount != 0) || m_gameRunning == false) {
+                //forward the gamestate to the ml-model every 60 frames, if the session is over or if the player has collected a pellet
+                if (true) {
 
                     //logs the current reward score
                     logData.m_reward = m_reward;
@@ -454,22 +486,22 @@ void Game::run() {
                     logData.m_truncated = m_truncated;
 
                     //log the terminated flag
-                    logData.m_done = m_terminated; 
+                    logData.m_done = m_terminated;
 
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
 
-   
+
                     if (predictedBuffer == sf::Vector2f(-1.0f, -1.0f)) {
                         m_gameInitialized = false;
                         m_score = 0;
-                        m_gameRunning = true; 
+                        m_gameRunning = true;
                         //leaves the inner game-loop to trigger reset
                         break;
                     }
-          
+
                     //DEBUGGING ONLY
-             
-                    //pPlayer->recieveInput(predictedBuffer);
+
+                    pPlayer->recieveInput(predictedBuffer);
                 }
     
                 render();
@@ -535,6 +567,8 @@ Game::~Game() {
         m_pEventLogger->closeSession(); 
     }
     clearGame();
+    //clears the texture cache only at the end of the program
+    m_textureCache.clear();
 }
 
 

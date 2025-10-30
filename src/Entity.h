@@ -15,7 +15,7 @@ class Entity {
 
 public:
 
-    Entity(const std::string& _filePath, sf::Vector2f& _spawnPosition);
+    Entity(const sf::Texture& _texture, sf::Vector2f& _spawnPosition);
     virtual ~Entity() = default;
     sf::Sprite& getSprite();
     sf::Texture& getTexture();
@@ -24,7 +24,7 @@ public:
 
 private:
 
-    sf::Texture m_texture;
+    const sf::Texture& m_texture;
     sf::Sprite m_sprite;
 };
 
