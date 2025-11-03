@@ -18,11 +18,10 @@ class PacmanEnv():
         self.current_state = None
         self.previous_action = None
         self.batch_size = 128
-        self.step_skip = 9
         self.train_freq = 9
         self.update_freq = 1000
         
-        self.commulative_reward = 0
+        self.episode_reward = 0
         self.step_count = 0
     
     #translate the raw observation into a valid observation-format
@@ -31,7 +30,9 @@ class PacmanEnv():
         raw_df = pd.json_normalize(raw)
 
         #cleans the raw-data-snapshot
-        obs = feature_engineer.cleanData(raw_df)        
+        obs = feature_engineer.cleanData(raw_df) 
+
+
         return obs
 
     def _step(self, line):
@@ -50,8 +51,7 @@ class PacmanEnv():
         done = raw_data.get("done", False)
         truncated = raw_data.get("truncated", False)
 
-        #DEBUGGING METRIC
-        self.commulative_reward += reward
+        self.episode_reward += reward
 
         
         if self.step_count > 0 and self.step_count % 1000 == 0: 
@@ -59,24 +59,18 @@ class PacmanEnv():
             #logging.info(f"COMM: saving model...")
             self.agent.save_model()
 
-        if self.step_count % self.step_skip == 0 or done or truncated: 
 
-            action = self.agent.select_action(obs)
+        action = self.agent.select_action(obs)
             
-            #adds the transition tuple to the replay buffer 
-            if self.previous_state is not None and self.previous_action is not None:
-                self.agent.replay_buffer_add(
-                    self.previous_state, 
-                    self.previous_action, 
-                    reward,
-                    obs,
-                    done
-                )
-        
-        else:
-            #selects the previous action until a new action has been queried
-            action = self.previous_action if self.previous_action is not None else 0
-
+        #adds the transition tuple to the replay buffer 
+        if self.previous_state is not None and self.previous_action is not None:
+            self.agent.replay_buffer_add(
+                self.previous_state, 
+                self.previous_action, 
+                reward,
+                obs,
+                done
+            )
 
         if self.agent.replay_buffer.__len__() >= self.batch_size and self.step_count % self.train_freq == 0:
             self.agent.train_step(self.batch_size)
@@ -98,9 +92,8 @@ class PacmanEnv():
             self.agent.reduce_epsilon()
 
             #DEBUGGING OUTPUT
-            logging.debug(f"reward: {self.commulative_reward}")
-            self.commulative_reward = 0
-
+            logging.debug(f"reward: {self.episode_reward}")
+            self.episode_reward = 0
 
             print("[-1]", flush=True)
 
@@ -111,9 +104,6 @@ class PacmanEnv():
 
             #action bounce back
             print(f"[{action}]", flush=True)
-
-
-
 
         #increases the step count
         self.step_count += 1

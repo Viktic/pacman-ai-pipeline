@@ -27,17 +27,11 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     //ASCII-grid-map 
     m_grid(
 {
-    "################",
-    "#......##......#",
-    "#.####.##.####.#", 
-    "#..............#",
-    "#.##.#.##.#.##.#",
-    "#....#.P..#...E#",
-    "#.##.#.##.#.##.#", 
-    "#..............#",
-    "#.####.##.####.#",
-    "#E.....##.....E#", 
-    "################"
+    "########",
+    "#P.....#",
+    "#.####.#",
+    "#..E...#",
+    "########"
 }),
 m_tileSize(80){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
@@ -313,7 +307,7 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
 
         //REWARD FUNCTION: negative reward for coliding with enemy
-        m_reward -= 50;
+        m_reward -= 10;
 
         m_gameRunning = false; 
         m_terminated = true;
@@ -328,6 +322,7 @@ void Game::resetPellets(std::vector<std::unique_ptr<Pellet>>& _pellets) {
     for (size_t i = 0; i < _pellets.size(); ++i) {
         _pellets[i]->setPickedUpState(false);
     }
+
 }
 
 //check collision between player and pellet
@@ -354,12 +349,13 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
         _pellet.setPickedUpState(true);
         m_score++; 
 
-        //REWARD FUNCITON: positive reward for picking up a pellet
-        m_reward += 5;
+        //REWARD FUNCTION: positive reward for picking up a pellet
+        m_reward += 1;
 
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
-            resetPellets(m_pPellets); 
+            resetPellets(m_pPellets);
+            m_reward += 20;
         }
     }
 }
@@ -468,7 +464,7 @@ void Game::run() {
                 }
 
                 //REWARD FUNCTION: decreases reward for time passing
-                m_reward -= 0.001f;
+                m_reward -= 0.01f;
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -487,6 +483,15 @@ void Game::run() {
 
                     //log the terminated flag
                     logData.m_done = m_terminated;
+
+                    //log the active pellet positions
+                    for (size_t i = 0; i < m_pPellets.size(); ++i) {
+                        if (!m_pPellets[i]->getPickedUpState()) {
+                            logData.m_pelletPositions.push_back(
+                                m_pPellets[i]->getSprite().getPosition()
+                            );
+                        }
+                    }
 
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
 
