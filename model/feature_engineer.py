@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-
-
-
+import logging
 
 #momentum-index translation table
 MOMENTUM_INDEX = {
@@ -49,76 +47,102 @@ def cleanData(df):
     player_momentumIndex = MOMENTUM_INDEX[tuple(player_momentum)]
     df["player_momentumIndex"] = player_momentumIndex
 
-    #unnest the enemy positions into a seperate dataframe
-    enemy_positions = pd.DataFrame(df["enemy_positions_screen"].tolist())
+   
+    #extracts the pellet positions
+    pellet_positions = df["pellet_positions"].iloc[0] if "pellet_positions" in df.columns else []
 
-    distances = []
-
-    for c in enemy_positions.columns:
+    if len(pellet_positions) > 0:
+        #finds nearest pellet
+        pellet_dists = []
+        for p in pellet_positions:
+            px, py = p[0] / game_width, p[1] / game_height
+            dx, dy = px - player_posX, py - player_posY
+            pellet_dists.append(float(np.hypot(dx, dy)) / np.sqrt(2))
         
-        px = enemy_positions[c][0][0] / game_width
-        py = enemy_positions[c][0][1] / game_height
+        nearest_idx = np.argmin(pellet_dists)
+        nearest_pellet = pellet_positions[nearest_idx]
+        
+        nearest_pellet_dist = pellet_dists[nearest_idx]
+        nearest_pellet_dx = (nearest_pellet[0] / game_width) - player_posX
+        nearest_pellet_dy = (nearest_pellet[1] / game_height) - player_posY
+        pellets_remaining = len(pellet_positions)
+    else:
+        nearest_pellet_dist = 0.0
+        nearest_pellet_dx = 0.0
+        nearest_pellet_dy = 0.0
+        pellets_remaining = 0
 
-        #calculate the distance between the enemy and the player coordinate wise
-        dx = px - player_posX
-        dy = py - player_posY
-
-        #lies in [0, sqrt(2)] therefore normalization 
-        distance = float(np.hypot(dx, dy)) / np.sqrt(2)
-
-        distances.append(distance)
-
-
-    #relative enemy position vector
-    enemy_rel = []
-    for c in enemy_positions.columns:
-        px = enemy_positions[c][0][0] / game_width
-        py = enemy_positions[c][0][1] / game_height
-        dx = px - player_posX
-        dy = py - player_posY
-        enemy_rel.extend([dx, dy])
-
-
-    #get the minimum enemy-player distance
-    min_enemy_distance = min(distances)
-
-    #unnest the enemy momenta into a seperate dataframe
-    enemy_momenta = pd.DataFrame(df["enemy_momenta"].tolist())
-
-    momenta = []
-
-    for c in enemy_momenta.columns:
-
-        m = enemy_momenta[c][0]
-
-        #check if the enemys momentum is opposite to the players momentum
-        mIndex = MOMENTUM_INDEX[tuple(m)]
-        comp = OPPOSITE_MOMENTUM_INDEX[tuple(player_momentum)]
-
-        momenta.append(float(mIndex == comp))
-
-    #1.0 means player and enemy are moving towards each other 
-    opposite_direction = max(momenta)
-
-    # Build feature list in guaranteed order (instead of dictionary)
     vals = [
-        player_posX,           # norm 
-        player_posY,           # norm 
-        min_enemy_distance,    # norm 
-        opposite_direction,    # norm 
-        distances[0],          # enemy0_distance norm 
-        distances[1],          # enemy1_distance norm 
-        distances[2],          # enemy2_distance norm 
+        player_posX,
+        player_posY,
+        nearest_pellet_dist,     
+        nearest_pellet_dx,       
+        nearest_pellet_dy,        
+        pellets_remaining / 50.0,  
     ]
     
+
     #one-hot encoding for player momentum
     player_momentum_vec = encode_direction(player_momentumIndex)
-    
-    # Add player momentum features (5 features)
+
+    #unnest the enemy positions into a seperate dataframe
+    if "enemy_positions_screen" in df.columns:
+        enemy_positions = pd.DataFrame(df["enemy_positions_screen"].tolist())
+
+        distances = []
+
+        for c in enemy_positions.columns:
+            
+            px = enemy_positions[c][0][0] / game_width
+            py = enemy_positions[c][0][1] / game_height
+
+            #calculate the distance between the enemy and the player coordinate wise
+            dx = px - player_posX
+            dy = py - player_posY
+
+            #lies in [0, sqrt(2)] therefore normalization 
+            distance = float(np.hypot(dx, dy)) / np.sqrt(2)
+            distances.append(distance)
+
+        #relative enemy position vector
+        enemy_rel = []
+        for c in enemy_positions.columns:
+            px = enemy_positions[c][0][0] / game_width
+            py = enemy_positions[c][0][1] / game_height
+            dx = px - player_posX
+            dy = py - player_posY
+            enemy_rel.extend([dx, dy])
+
+        #append the minimum enemy-player distance
+        vals.append(min(distances))
+
+        #adds relative enemy positions (2 features: dx, dy for each enemy)
+        vals.extend(enemy_rel)
+  
+
+    if "enemy_momenta" in df.columns:
+        #unnest the enemy momenta into a seperate dataframe
+        enemy_momenta = pd.DataFrame(df["enemy_momenta"].tolist())
+
+        momenta = []
+
+        for c in enemy_momenta.columns:
+
+            m = enemy_momenta[c][0]
+
+            #check if the enemys momentum is opposite to the players momentum
+            mIndex = MOMENTUM_INDEX[tuple(m)]
+            comp = OPPOSITE_MOMENTUM_INDEX[tuple(player_momentum)]
+
+            momenta.append(float(mIndex == comp))
+
+        #1.0 means player and enemy are moving towards each other 
+        vals.append(max(momenta))
+
+
+    #adds player momentum features (5 features)
     vals.extend(player_momentum_vec.tolist())
 
-    # Add relative enemy positions (6 features: dx, dy for each enemy)
-    vals.extend(enemy_rel)
         
     #builds np.array with final features
     final_features = np.array(vals, dtype=np.float32)

@@ -315,7 +315,7 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
         //REWARD FUNCTION: negative reward for coliding with enemy
         m_reward -= 50;
 
-        m_gameRunning = false; 
+        //m_gameRunning = false; 
         m_terminated = true;
 
         _player.resetMomentum();
@@ -476,7 +476,7 @@ void Game::run() {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
-                //forward the gamestate to the ml-model every 60 frames, if the session is over or if the player has collected a pellet
+                //controls model forwarding frequency
                 if (true) {
 
                     //logs the current reward score
@@ -570,14 +570,3 @@ Game::~Game() {
     //clears the texture cache only at the end of the program
     m_textureCache.clear();
 }
-
-
-
-
-
-
-
-
-
-
-
