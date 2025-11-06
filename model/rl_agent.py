@@ -14,16 +14,17 @@ class Agent():
 
     def __init__(self):
 
-        #creates a replay buffer instance with capacity 50.000
-        self.replay_buffer = replay_buffer.ReplayBuffer(50000)
+        #creates a replay buffer instance with capacity 100.000
+        self.replay_buffer = replay_buffer.ReplayBuffer(100000)
 
         self.policy_network_path = "policy_model_params.pth"
-        #start with high initial epsilon for maximum exploration 
         self.epsilon_start = 1.0
+
         #epsilon range determines the number of episodes over which the epsilon decay takes place
-        self.epsilon_range = 1000
+        self.epsilon_range = 2000
+
         self.epsilon_decay = 1/self.epsilon_range        
-        self.epsilon_end = 0.01
+        self.epsilon_end = 0.05
 
         self.epsilon = self.epsilon_start
 
@@ -35,26 +36,19 @@ class Agent():
         self.target_model = DeepQl_model.NeuralNetwork(15,5)
 
         #loads the params of an already trained policy model if it exists
-
         if os.path.exists(self.policy_network_path):
             #DEBUGGING
             logging.info("COMM: loading existing model")
-        
+            
             checkpoint = torch.load(self.policy_network_path, weights_only=False)
-
             self.policy_model.load_state_dict(checkpoint["model_state_dict"])
-
-
             self.epsilon = checkpoint["epsilon"]
-
-        else:
-            logging.error("Failed to load model")
 
         #syncs the target network with the policy network 
         self.target_model.load_state_dict(self.policy_model.state_dict())
     
         #optimizer for the model backpropagation
-        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=2.5e-4)
+        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=1e-3)
 
 
     def sync_target_net(self):
