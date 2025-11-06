@@ -27,11 +27,11 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     //ASCII-grid-map 
     m_grid(
 {
-    "########",
-    "#P.....#",
-    "#.####.#",
-    "#..E...#",
-    "########"
+    "###############",
+    "#P.....#......#",
+    "#.####...####.#",
+    "#..E...#......#",
+    "###############"
 }),
 m_tileSize(80){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
@@ -309,7 +309,6 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
         //REWARD FUNCTION: negative reward for coliding with enemy
         m_reward -= 10;
 
-        m_gameRunning = false; 
         m_terminated = true;
 
         _player.resetMomentum();
