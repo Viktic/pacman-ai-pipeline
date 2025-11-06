@@ -315,7 +315,6 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
         //REWARD FUNCTION: negative reward for coliding with enemy
         m_reward -= 50;
 
-        m_gameRunning = false; 
         m_terminated = true;
 
         _player.resetMomentum();
