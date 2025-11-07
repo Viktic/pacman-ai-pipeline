@@ -8,11 +8,11 @@ class NeuralNetwork(nn.Module):
 
         #defines the network architecture 
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(observation_dim,128),
+            nn.Linear(observation_dim,256),
             nn.LeakyReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(256, 256),
             nn.LeakyReLU(),
-            nn.Linear(128, action_dim)
+            nn.Linear(256, action_dim)
         )
 
     def forward(self, x):
