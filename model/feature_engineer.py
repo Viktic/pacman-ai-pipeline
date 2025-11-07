@@ -21,8 +21,11 @@ OPPOSITE_MOMENTUM_INDEX = {
 
 
 #normalization constants
-game_width = 1280
-game_height = 880 
+TILE_SIZE = 80
+GAME_WIDTH = 16 * TILE_SIZE
+GAME_HEIGHT = 11 * TILE_SIZE
+danger_radius_tiles = 2.0
+
 
 def encode_direction(dir_index): 
     vec = np.zeros(5)
@@ -38,8 +41,8 @@ def cleanData(df):
     player_pos = df["player_position_screen"].iloc[0]
     
     #normalize player positions
-    player_posX = float(player_pos[0]) / game_width
-    player_posY = float(player_pos[1]) / game_height
+    player_posX = float(player_pos[0]) / GAME_WIDTH
+    player_posY = float(player_pos[1]) / GAME_HEIGHT
     
 
     #convert the player momentum into its corresponding index
@@ -55,7 +58,7 @@ def cleanData(df):
         #finds nearest pellet
         pellet_dists = []
         for p in pellet_positions:
-            px, py = p[0] / game_width, p[1] / game_height
+            px, py = p[0] / GAME_WIDTH, p[1] / GAME_HEIGHT
             dx, dy = px - player_posX, py - player_posY
             pellet_dists.append(float(np.hypot(dx, dy)) / np.sqrt(2))
         
@@ -63,8 +66,8 @@ def cleanData(df):
         nearest_pellet = pellet_positions[nearest_idx]
         
         nearest_pellet_dist = pellet_dists[nearest_idx]
-        nearest_pellet_dx = (nearest_pellet[0] / game_width) - player_posX
-        nearest_pellet_dy = (nearest_pellet[1] / game_height) - player_posY
+        nearest_pellet_dx = (nearest_pellet[0] / GAME_WIDTH) - player_posX
+        nearest_pellet_dy = (nearest_pellet[1] / GAME_HEIGHT) - player_posY
         pellets_remaining = len(pellet_positions)
     else:
         nearest_pellet_dist = 0.0
@@ -93,8 +96,8 @@ def cleanData(df):
 
         for c in enemy_positions.columns:
             
-            px = enemy_positions[c][0][0] / game_width
-            py = enemy_positions[c][0][1] / game_height
+            px = enemy_positions[c][0][0] / GAME_WIDTH
+            py = enemy_positions[c][0][1] / GAME_HEIGHT
 
             #calculate the distance between the enemy and the player coordinate wise
             dx = px - player_posX
@@ -107,14 +110,22 @@ def cleanData(df):
         #relative enemy position vector
         enemy_rel = []
         for c in enemy_positions.columns:
-            px = enemy_positions[c][0][0] / game_width
-            py = enemy_positions[c][0][1] / game_height
+            px = enemy_positions[c][0][0] / GAME_WIDTH
+            py = enemy_positions[c][0][1] / GAME_HEIGHT
             dx = px - player_posX
             dy = py - player_posY
             enemy_rel.extend([dx, dy])
 
         #append the minimum enemy-player distance
         vals.append(min(distances))
+
+        #danger signal to reinforce min(distance) implicit danger indicator
+        danger_threshold = danger_radius_tiles * np.hypot(TILE_SIZE/GAME_WIDTH, TILE_SIZE/GAME_HEIGHT)
+        if min(distance) < danger_threshold: 
+            danger = 1.0
+        else: 
+            danger = 0.0
+        vals.append(danger)
 
         #adds relative enemy positions (2 features: dx, dy for each enemy)
         vals.extend(enemy_rel)
