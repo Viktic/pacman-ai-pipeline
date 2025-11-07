@@ -1,6 +1,6 @@
 ## Pacman Reinforcement Learning Pipeline
 
-Reinforcement Learning Pipeline to train a python based agent to learn how to play a PacMan style game built in a C++ environment
+Reinforcement Learning Pipeline to train a python based agent to learn how to play a PacMan style game built in a C++ environment.
 
 ## Project Status
 
