@@ -4,6 +4,7 @@
 #pragma once
 #include "tool.h"
 #include "EventLogger.h"
+#include <SFML/System/Vector2.hpp>
 #include <vector>
 #include <memory>
 #include <SFML/Graphics.hpp>
@@ -44,6 +45,9 @@ private:
     //private helper method to find crossings in the grid
     bool validCrossing(int _pX, int _pY);
 
+    //private helper method to check sorrounding tiles
+    std::vector<bool>validDirections(sf::Vector2i _gridCoordinates); 
+
     std::vector<std::unique_ptr<Pellet>> m_pPellets; 
     std::vector<std::string> m_grid;
     std::vector<std::unique_ptr<sf::RectangleShape>> m_pBorders;
@@ -68,6 +72,7 @@ private:
     bool m_gameRunning;
     bool m_gameInitialized;
     unsigned long m_frameCount; 
+    sf::Vector2i gridPosStamp;
 };
 
 

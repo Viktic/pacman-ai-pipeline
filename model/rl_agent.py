@@ -30,10 +30,10 @@ class Agent():
 
         #------ initialize the Q-Learning Models ------
         #policy network (used for queries)
-        self.policy_model = DeepQl_model.NeuralNetwork(16, 5)
+        self.policy_model = DeepQl_model.NeuralNetwork(20, 5)
         
         #target network (gets trained in the background)
-        self.target_model = DeepQl_model.NeuralNetwork(16,5)
+        self.target_model = DeepQl_model.NeuralNetwork(20,5)
 
         #loads the params of an already trained policy model if it exists
         if os.path.exists(self.policy_network_path):

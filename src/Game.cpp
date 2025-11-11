@@ -9,9 +9,13 @@
 #include "Pellet.h"
 #include "LogData.h"
 #include "EventLogger.h"
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
+#include <memory>
+#include <vector>
 
 //game constructor
 Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title, bool _logGame) :
@@ -146,6 +150,34 @@ bool Game::validCrossing(int _pX, int _pY) {
     return true;
 }
 
+//checks if the sorrounding directions are free
+std::vector<bool> Game::validDirections(sf::Vector2i _gridCoordinates) {
+    std::vector<bool> directions(4, false); 
+
+    //up
+    char up = m_grid[_gridCoordinates.y - 1][_gridCoordinates.x];
+    if (up != '#') {
+        directions[0] = true; 
+    }
+    //down
+    char down = m_grid[_gridCoordinates.y + 1][_gridCoordinates.x];
+        if (down != '#') {
+        directions[1] = true; 
+    }
+    //left 
+    char left = m_grid[_gridCoordinates.y][_gridCoordinates.x - 1];
+        if (left != '#') {
+        directions[2] = true; 
+    }
+    //right
+    char right = m_grid[_gridCoordinates.y][_gridCoordinates.x + 1];
+        if (right != '#') {
+        directions[3] = true; 
+    }
+    return directions;
+}
+
+
 //resets all the ownership vectors and deletes allocated object instances
 void Game::clearGame() {
  
@@ -238,7 +270,6 @@ void Game::initialize() {
     m_gameInitialized = true;
     m_truncated = false; 
     m_terminated = false; 
-
 }
 
 //renders game-objects
@@ -443,13 +474,28 @@ void Game::run() {
 
                         //add the Player specific data to pLogData
                         sf::Vector2f playerPosition = pPlayer->getSprite().getPosition();
-                        int col = static_cast<int>(floor(playerPosition.x / m_tileSize));
-                        int row = static_cast<int>(floor(playerPosition.y / m_tileSize));
+                        int col = int((playerPosition.x - 0.5f * m_tileSize) / m_tileSize);
+                        int row = int((playerPosition.y - 0.5f * m_tileSize) / m_tileSize);
+                        sf::Vector2i playerGridPosition = sf::Vector2i {col, row}; 
                         logData.m_playerScreenPosition = playerPosition;
-                        logData.m_playerGridPosition = sf::Vector2i{ col, row };
+                        logData.m_playerGridPosition = playerGridPosition;
                         logData.m_playerMomentum = pPlayer->getMomentum();
                         logData.m_playerBuffer = pPlayer->getBuffer();
 
+                        
+                        //keeps track of the sorrounding directions while the player moves inside a tile
+                        static std::vector<bool> cachedDirections(4, false); 
+                        static bool firstRun = true; 
+
+                        //check the sorrounding tiles if grid positions have changed
+                        if (gridPosStamp != playerGridPosition) {
+                            gridPosStamp = playerGridPosition; 
+                            cachedDirections = validDirections(playerGridPosition);
+                            firstRun = false;
+                        }
+
+                        //add the direction information to pLogData
+                        logData.m_validDirections = cachedDirections; 
                     }
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
 
@@ -463,7 +509,7 @@ void Game::run() {
                 }
 
                 //REWARD FUNCTION: decreases reward for time passing
-                m_reward -= 0.01f;
+                m_reward -= 0.001f;
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 

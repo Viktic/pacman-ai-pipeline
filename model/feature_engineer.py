@@ -75,6 +75,10 @@ def cleanData(df):
         nearest_pellet_dy = 0.0
         pellets_remaining = 0
 
+    #extracts the direction information 
+    directions = df["directions"]
+
+
     vals = [
         player_posX,
         player_posY,
@@ -121,7 +125,7 @@ def cleanData(df):
 
         #danger signal to reinforce min(distance) implicit danger indicator
         danger_threshold = danger_radius_tiles * np.hypot(TILE_SIZE/GAME_WIDTH, TILE_SIZE/GAME_HEIGHT)
-        if min(distance) < danger_threshold: 
+        if min(distances) < danger_threshold: 
             danger = 1.0
         else: 
             danger = 0.0
@@ -154,7 +158,14 @@ def cleanData(df):
     #adds player momentum features (5 features)
     vals.extend(player_momentum_vec.tolist())
 
-        
+    #converts direction booleans into binary features
+    if "directions" in df.columns: 
+        directions = df["directions"].iloc[0]
+        direction_features = [float(d) for d in directions]
+        vals.extend(direction_features)
+    
+
+
     #builds np.array with final features
     final_features = np.array(vals, dtype=np.float32)
 
