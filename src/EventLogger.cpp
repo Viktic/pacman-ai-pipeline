@@ -5,6 +5,7 @@
 
 #include "EventLogger.h"
 #include "tool.h"
+#include <cstddef>
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -220,6 +221,10 @@ void EventLogger::gatherLogData(LogData& _data) {
         }
     }
 
+    tick["directions"] = nlohmann::json::array();
+    for (size_t i = 0; i < _data.m_validDirections.size(); ++i) {
+        tick["directions"].push_back(_data.m_validDirections[i]);
+    }
 
     m_session["ticks"].push_back(tick);
 }
@@ -253,7 +258,6 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
         {"done", _data.m_done}
     };
 
-    snapshot["pellet_positions"] = nlohmann::json::array();
 
     //checks if there are enemy specific vectors
     if (!_data.m_enemyGridPositions.empty() && !_data.m_enemyMomenta.empty() && !_data.m_enemyScreenPositions.empty()) {
@@ -273,10 +277,17 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
         }
     }
 
+    snapshot["pellet_positions"] = nlohmann::json::array();
     for (size_t i = 0; i < _data.m_pelletPositions.size(); ++i) {
         snapshot["pellet_positions"].push_back( {_data.m_pelletPositions[i].x, _data.m_pelletPositions[i].y });
     }
 
+    snapshot["directions"] = nlohmann::json::array();
+    for (size_t i = 0; i < _data.m_validDirections.size(); ++i) {
+        snapshot["directions"].push_back(_data.m_validDirections[i]); 
+    }
+
+    
     std::string jsonLine = snapshot.dump() + "\n";
     ssize_t written = write(m_stdinWrite, jsonLine.c_str(), jsonLine.size());
     if (written == -1) {
