@@ -414,6 +414,12 @@ void Game::handleInput() {
 //runs the game
 void Game::run() {
 
+    //constant frame skip interval
+    const int ML_ACTION_INTERVAL = 4; 
+
+    //accumulated reward variable to keep track of reward between frame skips
+    float accumulatedReward = 0; 
+
     //outer game loop (handles the logic for creating a new game)
     while (m_window.isOpen()) {
         if (!m_gameInitialized) {
@@ -465,9 +471,9 @@ void Game::run() {
                             logData.m_enemyGridPositions.push_back(sf::Vector2i{ col, row });
 
                             //detect collisions between player and enemy
-                            checkCollisionEnemy(*pPlayer, *pEnemy);
-
-
+                            if (!m_terminated) {
+                                checkCollisionEnemy(*pPlayer, *pEnemy);
+                            }
                         }
                     }
                     else if (pPlayer && m_pEntities[i].get() == pPlayer) {
@@ -510,6 +516,7 @@ void Game::run() {
 
                 //REWARD FUNCTION: decreases reward for time passing
                 m_reward -= 0.001f;
+                accumulatedReward += m_reward; 
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -517,11 +524,11 @@ void Game::run() {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
-                //forward the gamestate to the ml-model every 60 frames, if the session is over or if the player has collected a pellet
-                if (true) {
+                //forward data to the ml model in intervals specified by ML_ACTION_INTERVAL
+                if (m_frameCount % ML_ACTION_INTERVAL == 0) {
 
                     //logs the current reward score
-                    logData.m_reward = m_reward;
+                    logData.m_reward = accumulatedReward;
 
                     //log the truncated flag
                     logData.m_truncated = m_truncated;
@@ -545,13 +552,13 @@ void Game::run() {
                         m_gameInitialized = false;
                         m_score = 0;
                         m_gameRunning = true;
+                        accumulatedReward = 0.0f;
                         //leaves the inner game-loop to trigger reset
                         break;
                     }
 
-                    //DEBUGGING ONLY
-
                     pPlayer->recieveInput(predictedBuffer);
+                    accumulatedReward = 0.0f; 
                 }
     
                 render();

@@ -71,7 +71,7 @@ private:
     bool m_logGame;
     bool m_gameRunning;
     bool m_gameInitialized;
-    unsigned long m_frameCount; 
+    unsigned long m_frameCount;  
     sf::Vector2i gridPosStamp;
 };
 
