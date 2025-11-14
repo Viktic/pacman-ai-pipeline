@@ -14,8 +14,8 @@ class Agent():
 
     def __init__(self):
 
-        #creates a replay buffer instance with capacity 100.000
-        self.replay_buffer = replay_buffer.ReplayBuffer(100000)
+        #creates a replay buffer instance with capacity 20.000
+        self.replay_buffer = replay_buffer.ReplayBuffer(20000)
 
         self.policy_network_path = "policy_model_params.pth"
         self.epsilon_start = 1.0
@@ -48,12 +48,19 @@ class Agent():
         self.target_model.load_state_dict(self.policy_model.state_dict())
     
         #optimizer for the model backpropagation
-        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=1e-3)
+        self.optimizer = optim.Adam (self.policy_model.parameters(), lr=5e-4)
 
 
-    def sync_target_net(self):
+    def sync_target_net(self, tau=0.001):
         #syncs the target network with the policy network 
-        self.target_model.load_state_dict(self.policy_model.state_dict())
+
+        for target_param, policy_param in zip(
+            self.target_model.parameters(),
+            self.policy_model.parameters()
+        ):
+            target_param.data.copy_(
+                tau * policy_param.data + (1 - tau) * target_param.data
+            )
 
     def replay_buffer_add(self, prev_state, prev_action, reward, obs, done):
         #adds the transition tuple to the replay buffer 
@@ -115,8 +122,6 @@ class Agent():
             
             #bellman equation for target q-values
             target_q_values = rewards + gamma * next_q_values * (1 - dones)
-
-
 
         #calculates loss
         loss = nn.HuberLoss()(q_values, target_q_values)

@@ -18,8 +18,8 @@ class PacmanEnv():
         self.current_state = None
         self.previous_action = None
         self.batch_size = 128
-        self.train_freq = 9
-        self.update_freq = 1000
+        self.train_freq = 4
+        self.update_freq = 1
         
         self.episode_reward = 0
         self.step_count = 0
@@ -48,6 +48,8 @@ class PacmanEnv():
         #converts the json into observation format
         obs = self._translate_obs(raw_data)
         reward = raw_data.get("reward", 0)
+
+        
         done = raw_data.get("done", False)
         truncated = raw_data.get("truncated", False)
 
@@ -75,7 +77,7 @@ class PacmanEnv():
         if self.agent.replay_buffer.__len__() >= self.batch_size and self.step_count % self.train_freq == 0:
             self.agent.train_step(self.batch_size)
 
-        #sync the target policy and target net
+        #sync the policy and target net
         if self.step_count % self.update_freq == 0: 
             self.agent.sync_target_net()
             
