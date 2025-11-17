@@ -49,7 +49,6 @@ class PacmanEnv():
         obs = self._translate_obs(raw_data)
         reward = raw_data.get("reward", 0)
 
-        
         done = raw_data.get("done", False)
         truncated = raw_data.get("truncated", False)
 
