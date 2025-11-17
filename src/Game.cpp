@@ -177,6 +177,31 @@ std::vector<bool> Game::validDirections(sf::Vector2i _gridCoordinates) {
     return directions;
 }
 
+//check distance to wall 
+float Game::getDistanceToWall(sf::Vector2i _startPos, sf::Vector2i _direction) {
+    int distance = 0;
+    sf::Vector2i currentPos = _startPos; 
+
+    //max view distance to avoid overhead
+    const float MAX_DISTANCE = 20.0f; 
+
+    while (true) {
+        currentPos += _direction;
+        distance++;
+
+        //out of bounds check
+        if (currentPos.y < 0 || currentPos.y >= m_grid.size() || currentPos.x < 0 || currentPos.x >= m_grid[0].size()) {
+            break; 
+        }
+        
+        if (m_grid[currentPos.y][currentPos.x] == '#') {
+            break;
+        }
+    }
+    //return normalized distance 
+    return std::min((float)distance, MAX_DISTANCE) / MAX_DISTANCE;
+}
+
 
 //resets all the ownership vectors and deletes allocated object instances
 void Game::clearGame() {
@@ -499,6 +524,15 @@ void Game::run() {
                             cachedDirections = validDirections(playerGridPosition);
                             firstRun = false;
                         }
+                        
+                        std::vector<sf::Vector2i> dirs = {{0, -1}, {0,1}, {-1, 0}, {1, 0 }};
+                        std::vector<float> wallDistances; 
+
+                        for (size_t i = 0; i < dirs.size(); ++i) {
+                            wallDistances.push_back(getDistanceToWall(playerGridPosition, dirs[i]));
+                        }
+
+                        logData.m_wallDistances = wallDistances;
 
                         //add the direction information to pLogData
                         logData.m_validDirections = cachedDirections; 

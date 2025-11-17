@@ -45,6 +45,9 @@ private:
     //private helper method to find crossings in the grid
     bool validCrossing(int _pX, int _pY);
 
+    //private helper method to get distance to next wall
+    float getDistanceToWall(sf::Vector2i _startPos, sf::Vector2i _direction);
+
     //private helper method to check sorrounding tiles
     std::vector<bool>validDirections(sf::Vector2i _gridCoordinates); 
 

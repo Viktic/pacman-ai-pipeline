@@ -18,6 +18,7 @@ struct LogData {
 	sf::Vector2f m_playerBuffer;
 	std::vector<sf::Vector2f> m_pelletPositions;
 	std::vector<bool> m_validDirections;
+	std::vector<float> m_wallDistances; 
 	int m_score; 
 	float m_reward; 
 	unsigned long m_tick; 

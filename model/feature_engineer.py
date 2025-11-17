@@ -164,7 +164,10 @@ def cleanData(df):
         direction_features = [float(d) for d in directions]
         vals.extend(direction_features)
     
-
+    #converts the wall distance features into 
+    if "wall_distances" in df.columns:
+        wall_distances = df["wall_distances"].iloc[0]
+        vals.extend(wall_distances)
 
     #builds np.array with final features
     final_features = np.array(vals, dtype=np.float32)

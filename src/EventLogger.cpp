@@ -287,7 +287,11 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
         snapshot["directions"].push_back(_data.m_validDirections[i]); 
     }
 
-    
+    snapshot["wall_distances"] = nlohmann::json::array(); 
+    for (size_t i = 0; i < _data.m_wallDistances.size(); ++i) {
+        snapshot["wall_distances"].push_back(_data.m_wallDistances[i]);
+    }
+
     std::string jsonLine = snapshot.dump() + "\n";
     ssize_t written = write(m_stdinWrite, jsonLine.c_str(), jsonLine.size());
     if (written == -1) {
