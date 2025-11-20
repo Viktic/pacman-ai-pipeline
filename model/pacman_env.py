@@ -4,6 +4,8 @@ import numpy as np
 import json
 import rl_agent
 import logging
+from collections import deque
+
 
 
 class PacmanEnv(): 
@@ -19,11 +21,15 @@ class PacmanEnv():
         self.previous_action = None
         self.batch_size = 128
         self.train_freq = 4
-        self.update_freq = 1
+        self.update_freq = 4
         
         self.episode_reward = 0
         self.step_count = 0
-    
+
+        #backlog to keep track of the last n session rewards
+        self.backlog_size = 100
+        self.episode_reward_backlog = deque(maxlen=self.backlog_size)
+
     #translate the raw observation into a valid observation-format
     def _translate_obs(self, raw): 
 
@@ -94,6 +100,16 @@ class PacmanEnv():
 
             #DEBUGGING OUTPUT
             logging.debug(f"reward: {self.episode_reward}")
+
+            self.episode_reward_backlog.append(self.episode_reward)
+
+            #check if the backlog size has been reached
+            if (len(self.episode_reward_backlog) >= self.backlog_size): 
+       
+                avg_reward = np.mean(self.episode_reward_backlog)
+                #calls the lr scheduler from the agent class
+                self.agent.reduce_lr(avg_reward)
+                
             self.episode_reward = 0
 
             print("[-1]", flush=True)
