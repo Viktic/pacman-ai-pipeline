@@ -13,7 +13,7 @@ Pellet::Pellet(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
 {
 	sf::FloatRect spriteBounds = getSprite().getGlobalBounds();
 	m_sprite.setPosition(_spawnPosition);
-	m_sprite.setOrigin({ spriteBounds.size.x * -0.25f, spriteBounds.size.y * -0.25f});
+	m_sprite.setOrigin({ spriteBounds.size.x * 0.5f, spriteBounds.size.y * 0.5f});
 	m_sprite.setScale({ 0.05f, 0.05f});
 }
 

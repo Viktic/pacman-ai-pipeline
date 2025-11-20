@@ -12,9 +12,7 @@ std::mt19937 Enemy::m_rng(std::random_device{}());
 Enemy::Enemy(const sf::Texture& _texture, sf::Vector2f _spawnPosition):
 m_speed(1.2f),
 m_momentum({0.0f, 0.0f}),
-Entity(_texture, _spawnPosition) {
-    getSprite().setColor(sf::Color::Red); 
-}
+Entity(_texture, _spawnPosition) {}
 
 //momentum getter
 sf::Vector2f& Enemy::getMomentum() {
