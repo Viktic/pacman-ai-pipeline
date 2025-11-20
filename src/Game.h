@@ -75,6 +75,8 @@ private:
     bool m_gameRunning;
     bool m_gameInitialized;
     unsigned long m_frameCount;  
+    float m_gridOffsetX;
+    float m_gridOffsetY;
     sf::Vector2i gridPosStamp;
 };
 

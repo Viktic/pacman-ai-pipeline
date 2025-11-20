@@ -37,7 +37,9 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     "#..E...#......#",
     "###############"
 }),
-m_tileSize(80){
+m_tileSize(80),
+m_gridOffsetX(40.0f),
+m_gridOffsetY(40.0f){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(100);
     
@@ -63,6 +65,8 @@ void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
 void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color) {
 
     std::unique_ptr<sf::RectangleShape> pBorder = std::make_unique<sf::RectangleShape>(sf::Vector2f{ m_tileSize, m_tileSize });
+    pBorder->setOrigin({m_tileSize * 0.5f, m_tileSize * 0.5f});
+
 
     pBorder->setPosition(_spawnPosition);
     pBorder->setFillColor(sf::Color::Black );
@@ -259,14 +263,14 @@ void Game::initialize() {
             case 'P': {
 
                 //loads the player texture only once then caches it
-                if (m_textureCache.find("sprites/HannesSprite.png") == m_textureCache.end()) {
-                    if (!m_textureCache["sprites/HannesSprite.png"].loadFromFile("sprites/HannesSprite.png")) {
+                if (m_textureCache.find("sprites/PlayerSprite.png") == m_textureCache.end()) {
+                    if (!m_textureCache["sprites/PlayerSprite.png"].loadFromFile("sprites/PlayerSprite.png")) {
                         std::cerr << "ERROR: Failed to load player texture" << std::endl;
                         break;
                     }
                 }
 
-                auto player = std::make_unique<Player>(m_textureCache["sprites/HannesSprite.png"],sf::Vector2f(px, py));
+                auto player = std::make_unique<Player>(m_textureCache["sprites/PlayerSprite.png"],sf::Vector2f(px, py));
 
                 //insert the player into the m_pEntities vector
                 Player::instance = player.get();
@@ -276,7 +280,7 @@ void Game::initialize() {
                     //initialize enemy instances + underlying pellet instances
             case 'E': {
                 addPellet("sprites/PelletSprite.png", { px, py });
-                addEnemy("sprites/HannesSprite.png", { px, py });
+                addEnemy("sprites/EnemySprite.png", { px, py });
                 break;
             }
                     //initialize borders
@@ -299,31 +303,36 @@ void Game::initialize() {
 
 //renders game-objects
 void Game::render() {
+m_window.clear();
 
-    m_window.clear();
+    //transformation to create offset
+    sf::Transform transform;
+    transform.translate({m_gridOffsetX, m_gridOffsetY}); 
+    
+    sf::RenderStates states;
+    states.transform = transform;
 
-    //render pellet-objects only when pickedUpState == false
+    //draw Pellets
     size_t pelletCount = m_pPellets.size();
-
     for (size_t i = 0; i < pelletCount; ++i) {
         if (m_pPellets[i]->getPickedUpState() == false) {
-            m_window.draw(m_pPellets[i]->getSprite());
+            m_window.draw(m_pPellets[i]->getSprite(), states);
         }
     }
 
-    //render border-objects
+    //draw Borders
     size_t borderCount = m_pBorders.size();
-
     for (size_t i = 0; i < borderCount; ++i) {
-        m_window.draw(*(m_pBorders[i].get()));
+        m_window.draw(*(m_pBorders[i].get()), states);
     }
 
-    //render entity-objects
+    //draw Entities
     for (size_t i = 0; i < m_pEntities.size(); ++i) {
-        m_window.draw(m_pEntities[i]->getSprite());
+        m_window.draw(m_pEntities[i]->getSprite(), states);
     }
 
     m_window.display();
+
 }
 
 //check collision between player and enemies 
