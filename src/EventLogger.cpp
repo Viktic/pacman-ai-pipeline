@@ -5,6 +5,7 @@
 
 #include "EventLogger.h"
 #include "tool.h"
+#include <cstddef>
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -203,18 +204,26 @@ void EventLogger::gatherLogData(LogData& _data) {
         {"score", _data.m_score}
     };
 
-    tick["enemy_positions_screen"] = nlohmann::json::array();
-    tick["enemy_positions_grid"] = nlohmann::json::array();
-    tick["enemy_momenta"] = nlohmann::json::array();
+    //checks if there are enemy specific vectors
+    if (_data.m_enemyGridPositions.size() != 0 && _data.m_enemyMomenta.size() != 0 && _data.m_enemyScreenPositions.size() != 0) {
+        tick["enemy_positions_screen"] = nlohmann::json::array();
+        tick["enemy_positions_grid"] = nlohmann::json::array();
+        tick["enemy_momenta"] = nlohmann::json::array();
 
-    for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
-        tick["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
+        for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
+            tick["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
+        }
+        for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
+            tick["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
+        }
+        for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
+            tick["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+        }
     }
-    for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
-        tick["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
-    }
-    for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
-        tick["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+
+    tick["directions"] = nlohmann::json::array();
+    for (size_t i = 0; i < _data.m_validDirections.size(); ++i) {
+        tick["directions"].push_back(_data.m_validDirections[i]);
     }
 
     m_session["ticks"].push_back(tick);
@@ -249,18 +258,38 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
         {"done", _data.m_done}
     };
 
-    snapshot["enemy_positions_screen"] = nlohmann::json::array();
-    snapshot["enemy_positions_grid"] = nlohmann::json::array();
-    snapshot["enemy_momenta"] = nlohmann::json::array();
 
-    for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
-        snapshot["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
+    //checks if there are enemy specific vectors
+    if (!_data.m_enemyGridPositions.empty() && !_data.m_enemyMomenta.empty() && !_data.m_enemyScreenPositions.empty()) {
+        snapshot["enemy_positions_screen"] = nlohmann::json::array();
+        snapshot["enemy_positions_grid"] = nlohmann::json::array();
+        snapshot["enemy_momenta"] = nlohmann::json::array();
+
+
+        for (size_t i = 0; i < _data.m_enemyScreenPositions.size(); ++i) {
+            snapshot["enemy_positions_screen"].push_back({ _data.m_enemyScreenPositions[i].x, _data.m_enemyScreenPositions[i].y });
+        }
+        for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
+            snapshot["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
+        }
+        for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
+            snapshot["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+        }
     }
-    for (size_t i = 0; i < _data.m_enemyGridPositions.size(); ++i) {
-        snapshot["enemy_positions_grid"].push_back({ _data.m_enemyGridPositions[i].x, _data.m_enemyGridPositions[i].y });
+
+    snapshot["pellet_positions"] = nlohmann::json::array();
+    for (size_t i = 0; i < _data.m_pelletPositions.size(); ++i) {
+        snapshot["pellet_positions"].push_back( {_data.m_pelletPositions[i].x, _data.m_pelletPositions[i].y });
     }
-    for (size_t i = 0; i < _data.m_enemyMomenta.size(); ++i) {
-        snapshot["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
+
+    snapshot["directions"] = nlohmann::json::array();
+    for (size_t i = 0; i < _data.m_validDirections.size(); ++i) {
+        snapshot["directions"].push_back(_data.m_validDirections[i]); 
+    }
+
+    snapshot["wall_distances"] = nlohmann::json::array(); 
+    for (size_t i = 0; i < _data.m_wallDistances.size(); ++i) {
+        snapshot["wall_distances"].push_back(_data.m_wallDistances[i]);
     }
 
     std::string jsonLine = snapshot.dump() + "\n";

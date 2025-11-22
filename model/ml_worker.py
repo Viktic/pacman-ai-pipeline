@@ -7,6 +7,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 import pacman_env 
 
+#Debugging
 logging.basicConfig(filename='/Users/viktorbrandmaier/Desktop/Pacman-Pipeline/pacman-ai-pipeline/tests/python_worker_debug.log', level=logging.DEBUG)
 
 env = pacman_env.PacmanEnv()
