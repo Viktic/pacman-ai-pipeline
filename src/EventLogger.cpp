@@ -108,26 +108,7 @@ EventLogger::EventLogger() :
     }
 }
 
-	//all the relevant path configurations are stored in config/paths.json
-	std::fstream file("config/paths.json");
-
-	//throw error if paths.json can't be opened 
-	if (!file.is_open()) {
-		std::cerr << "failed to open file: config/paths.json" << std::endl;
-	}
-
-
-
-	//read the config file contents
-	nlohmann::json j;
-	file >> j;
-	file.close();
-
-	//set the rawDataDir path
-	m_rawDataDir = j["rawDataDir"];
-
-	//set the rawDataManifest path
-	m_rawDataManifest = j["rawDataDirManifest"]; 
+int EventLogger::getSessionId() {
 
     if (!std::filesystem::exists(m_rawDataManifest)) {
         std::ofstream manifest(m_rawDataManifest);
@@ -138,13 +119,13 @@ EventLogger::EventLogger() :
         return 0;
     }
 
-	//set the python executable path
-	std::string pythonPath = j["pythonPath"];
+    std::ifstream manifest(m_rawDataManifest, std::ifstream::binary);
+    if (!manifest.is_open()) {
+        std::cerr << "failed to open file: " << m_rawDataManifest << std::endl;
+    }
 
-
-	//start the python process
-	HANDLE hStdinRead;
-	HANDLE hStdoutWrite;
+    manifest.seekg(0, std::ios_base::end);
+    int streamPos = manifest.tellg();
 
     char c;
     std::string lastLine;
@@ -160,11 +141,7 @@ EventLogger::EventLogger() :
         }
     }
 
-	std::string cmd = pythonPath + " -u " + ml_workerPath;
-	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
-		std::cerr << "Failed to start Python process! cmd path: " << cmd << std::endl;
-	} 	
-
+    getline(manifest, lastLine);
 
     if (singularJsonObject == true) {
         manifest.read(&c, 1);
@@ -324,24 +301,43 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 
     std::string response;
     char ch;
-  
-    //sends json + newline delimiter
-    std::string jsonLine = snapshot.dump() + "\n";
-    DWORD written;
-    WriteFile(m_hStdinWrite, jsonLine.c_str(), (DWORD)jsonLine.size(), &written, nullptr);
-    FlushFileBuffers(m_hStdinWrite);
-    //reads the json-line
-    std::string response;
-    char ch;
-    DWORD read;
+
+    struct pollfd pfd;
+    pfd.fd = m_stdoutRead;
+    pfd.events = POLLIN;
+
+    const int TIMEOUT_MS = 10000;
+
     while (true) {
-      if (!ReadFile(m_hStdoutRead, &ch, 1, &read, nullptr) || read == 0) {
-        std::cerr << "ReadFile failed or EOF" << std::endl;
-        break;
-      }
-      if (ch == '\n') break;
-      if (ch == '\r') continue;  
-      response.push_back(ch);
+        int pollResult = poll(&pfd, 1, TIMEOUT_MS);
+
+        if (pollResult == -1) {
+            std::cerr << "Poll error" << std::endl;
+            break;
+        } else if (pollResult == 0) {
+            std::cerr << "Read timeout from python process" << std::endl;
+            break;
+        }
+
+        ssize_t bytesRead = read(m_stdoutRead, &ch, 1);
+
+        if (bytesRead <= 0) {
+            break;
+        }
+
+        if (ch == '\n') {
+            break;
+        }
+
+        response.push_back(ch);
+
+        if (!response.empty() && response.back() == '\r') {
+            response.pop_back();
+        }
+    }
+
+    if (response.empty()) {
+        return sf::Vector2f(0, 0);
     }
 
     sf::Vector2f hashedDirection = tool::translationMap[response];

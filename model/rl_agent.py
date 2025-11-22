@@ -63,6 +63,7 @@ class Agent():
 
         #syncs the target network with the policy network 
         self.target_model.load_state_dict(self.policy_model.state_dict())
+    
 
 
     def sync_target_net(self, tau=0.001):
