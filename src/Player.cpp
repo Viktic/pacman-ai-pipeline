@@ -33,6 +33,8 @@ sf::Vector2f& Player::getMomentum() {
 sf::Vector2f& Player::getBuffer() {
     return m_buffer; 
 }
+
+
  
 //handle the buffered-movement logic 
 void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
@@ -225,6 +227,7 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
     else {
         //inverse momentum when hitting a wall
         m_momentum *= -1.0f; 
+
     }
 
     //sync texture with momentum

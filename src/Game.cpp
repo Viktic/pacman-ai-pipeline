@@ -670,14 +670,3 @@ Game::~Game() {
     //clears the texture cache only at the end of the program
     m_textureCache.clear();
 }
-
-
-
-
-
-
-
-
-
-
-
