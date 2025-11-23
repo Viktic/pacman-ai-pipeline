@@ -39,7 +39,7 @@ Start by cloning the repository to your local machine:
 git clone [https://github.com/viktic/pacman-ai-pipeline.git](https://github.com/viktic/pacman-ai-pipeline.git)
 cd pacman-ai-pipeline
 ```
-### Create and activate virtual environment
+### 2. Create and activate virtual environment
 ```bash
 python -m venv venv
 ```
@@ -53,18 +53,18 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### Install dependencies
+### 3. Install python dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### Configure paths
+### 4. Configure paths
 run the configuration script to generate absolute paths
 ```bash
 python scripts/path_configurator.py
 ```
 
-### Build the C++ Engine
+### 5. Build the C++ Engine
 use CMake to configure and build the project. SFML and other C++ dependencies will be fetched automatically
 ```bash
 mkdir build && cd build
@@ -72,7 +72,7 @@ cmake ..
 cmake --build .
 ```
 
-### Run the training
+### 6. Run the training
 execute the generated binary
 
 ##### On windows
