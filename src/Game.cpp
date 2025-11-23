@@ -2,16 +2,25 @@
 // Created by Viktor Brandmaier on 02.08.25.
 //
 
+#ifdef _WIN32
+    #include "EventLogger_win.h"
+#else
+    #include "EventLogger_unix.h"
+#endif
+
 #include "Game.h"
 #include "Entity.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "Pellet.h"
 #include "LogData.h"
-#include "EventLogger.h"
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
+#include <memory>
+#include <vector>
 
 //game constructor
 Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _title, bool _logGame) :
@@ -27,19 +36,15 @@ Game::Game(unsigned _windowSizeX, unsigned _windowSizeY, const std::string& _tit
     //ASCII-grid-map 
     m_grid(
 {
-    "################",
-    "#......##......#",
-    "#.####.##.####.#", 
-    "#..............#",
-    "#.##.#.##.#.##.#",
-    "#....#.P..#...E#",
-    "#.##.#.##.#.##.#", 
-    "#..............#",
-    "#.####.##.####.#",
-    "#E.....##.....E#", 
-    "################"
+    "###############",
+    "#P.....#......#",
+    "#.####...####.#",
+    "#..E...#......#",
+    "###############"
 }),
-m_tileSize(80){
+m_tileSize(80),
+m_gridOffsetX(40.0f),
+m_gridOffsetY(40.0f){
     m_window = sf::RenderWindow(sf::VideoMode({_windowSizeX, _windowSizeY}), _title);
     m_window.setFramerateLimit(100);
     
@@ -65,6 +70,8 @@ void Game::addEnemy(const std::string& _filePath, sf::Vector2f _spawnPosition) {
 void Game::addBorder(sf::Vector2f _spawnPosition, float _tileSize, sf::Color _color) {
 
     std::unique_ptr<sf::RectangleShape> pBorder = std::make_unique<sf::RectangleShape>(sf::Vector2f{ m_tileSize, m_tileSize });
+    pBorder->setOrigin({m_tileSize * 0.5f, m_tileSize * 0.5f});
+
 
     pBorder->setPosition(_spawnPosition);
     pBorder->setFillColor(sf::Color::Black );
@@ -152,6 +159,59 @@ bool Game::validCrossing(int _pX, int _pY) {
     return true;
 }
 
+//checks if the sorrounding directions are free
+std::vector<bool> Game::validDirections(sf::Vector2i _gridCoordinates) {
+    std::vector<bool> directions(4, false); 
+
+    //up
+    char up = m_grid[_gridCoordinates.y - 1][_gridCoordinates.x];
+    if (up != '#') {
+        directions[0] = true; 
+    }
+    //down
+    char down = m_grid[_gridCoordinates.y + 1][_gridCoordinates.x];
+        if (down != '#') {
+        directions[1] = true; 
+    }
+    //left 
+    char left = m_grid[_gridCoordinates.y][_gridCoordinates.x - 1];
+        if (left != '#') {
+        directions[2] = true; 
+    }
+    //right
+    char right = m_grid[_gridCoordinates.y][_gridCoordinates.x + 1];
+        if (right != '#') {
+        directions[3] = true; 
+    }
+    return directions;
+}
+
+//check distance to wall 
+float Game::getDistanceToWall(sf::Vector2i _startPos, sf::Vector2i _direction) {
+    int distance = 0;
+    sf::Vector2i currentPos = _startPos; 
+
+    //max view distance to avoid overhead
+    const float MAX_DISTANCE = 20.0f; 
+
+    while (true) {
+        currentPos += _direction;
+        distance++;
+
+        //out of bounds check
+        if (currentPos.y < 0 || currentPos.y >= m_grid.size() || currentPos.x < 0 || currentPos.x >= m_grid[0].size()) {
+            break; 
+        }
+        
+        if (m_grid[currentPos.y][currentPos.x] == '#') {
+            break;
+        }
+    }
+    //return normalized distance 
+    return std::min((float)distance, MAX_DISTANCE) / MAX_DISTANCE;
+}
+
+
 //resets all the ownership vectors and deletes allocated object instances
 void Game::clearGame() {
  
@@ -208,14 +268,14 @@ void Game::initialize() {
             case 'P': {
 
                 //loads the player texture only once then caches it
-                if (m_textureCache.find("sprites/HannesSprite.png") == m_textureCache.end()) {
-                    if (!m_textureCache["sprites/HannesSprite.png"].loadFromFile("sprites/HannesSprite.png")) {
+                if (m_textureCache.find("sprites/PlayerSprite.png") == m_textureCache.end()) {
+                    if (!m_textureCache["sprites/PlayerSprite.png"].loadFromFile("sprites/PlayerSprite.png")) {
                         std::cerr << "ERROR: Failed to load player texture" << std::endl;
                         break;
                     }
                 }
 
-                auto player = std::make_unique<Player>(m_textureCache["sprites/HannesSprite.png"],sf::Vector2f(px, py));
+                auto player = std::make_unique<Player>(m_textureCache["sprites/PlayerSprite.png"],sf::Vector2f(px, py));
 
                 //insert the player into the m_pEntities vector
                 Player::instance = player.get();
@@ -225,7 +285,7 @@ void Game::initialize() {
                     //initialize enemy instances + underlying pellet instances
             case 'E': {
                 addPellet("sprites/PelletSprite.png", { px, py });
-                addEnemy("sprites/HannesSprite.png", { px, py });
+                addEnemy("sprites/EnemySprite.png", { px, py });
                 break;
             }
                     //initialize borders
@@ -244,36 +304,40 @@ void Game::initialize() {
     m_gameInitialized = true;
     m_truncated = false; 
     m_terminated = false; 
-
 }
 
 //renders game-objects
 void Game::render() {
+m_window.clear();
 
-    m_window.clear();
+    //transformation to create offset
+    sf::Transform transform;
+    transform.translate({m_gridOffsetX, m_gridOffsetY}); 
+    
+    sf::RenderStates states;
+    states.transform = transform;
 
-    //render pellet-objects only when pickedUpState == false
+    //draw Pellets
     size_t pelletCount = m_pPellets.size();
-
     for (size_t i = 0; i < pelletCount; ++i) {
         if (m_pPellets[i]->getPickedUpState() == false) {
-            m_window.draw(m_pPellets[i]->getSprite());
+            m_window.draw(m_pPellets[i]->getSprite(), states);
         }
     }
 
-    //render border-objects
+    //draw Borders
     size_t borderCount = m_pBorders.size();
-
     for (size_t i = 0; i < borderCount; ++i) {
-        m_window.draw(*(m_pBorders[i].get()));
+        m_window.draw(*(m_pBorders[i].get()), states);
     }
 
-    //render entity-objects
+    //draw Entities
     for (size_t i = 0; i < m_pEntities.size(); ++i) {
-        m_window.draw(m_pEntities[i]->getSprite());
+        m_window.draw(m_pEntities[i]->getSprite(), states);
     }
 
     m_window.display();
+
 }
 
 //check collision between player and enemies 
@@ -313,9 +377,8 @@ void Game::checkCollisionEnemy(Player& _player, Enemy& _enemy) {
     if (playerBounds.findIntersection(enemyBounds)) {
 
         //REWARD FUNCTION: negative reward for coliding with enemy
-        m_reward -= 50;
+        m_reward -= 10;
 
-        //m_gameRunning = false; 
         m_terminated = true;
 
         _player.resetMomentum();
@@ -328,6 +391,7 @@ void Game::resetPellets(std::vector<std::unique_ptr<Pellet>>& _pellets) {
     for (size_t i = 0; i < _pellets.size(); ++i) {
         _pellets[i]->setPickedUpState(false);
     }
+
 }
 
 //check collision between player and pellet
@@ -354,12 +418,13 @@ void Game::checkCollisionPellet(Player& _player, Pellet& _pellet) {
         _pellet.setPickedUpState(true);
         m_score++; 
 
-        //REWARD FUNCITON: positive reward for picking up a pellet
-        m_reward += 5;
+        //REWARD FUNCTION: positive reward for picking up a pellet
+        m_reward += 1;
 
         //check if all pellets on the screen are cleared 
         if (m_score % m_pPellets.size() == 0 && m_score > 0) {
-            resetPellets(m_pPellets); 
+            resetPellets(m_pPellets);
+            m_reward += 20;
         }
     }
 }
@@ -387,6 +452,12 @@ void Game::handleInput() {
 
 //runs the game
 void Game::run() {
+
+    //constant frame skip interval
+    const int ML_ACTION_INTERVAL = 4; 
+
+    //accumulated reward variable to keep track of reward between frame skips
+    float accumulatedReward = 0; 
 
     //outer game loop (handles the logic for creating a new game)
     while (m_window.isOpen()) {
@@ -439,22 +510,46 @@ void Game::run() {
                             logData.m_enemyGridPositions.push_back(sf::Vector2i{ col, row });
 
                             //detect collisions between player and enemy
-                            checkCollisionEnemy(*pPlayer, *pEnemy);
-
-
+                            if (!m_terminated) {
+                                checkCollisionEnemy(*pPlayer, *pEnemy);
+                            }
                         }
                     }
                     else if (pPlayer && m_pEntities[i].get() == pPlayer) {
 
                         //add the Player specific data to pLogData
                         sf::Vector2f playerPosition = pPlayer->getSprite().getPosition();
-                        int col = static_cast<int>(floor(playerPosition.x / m_tileSize));
-                        int row = static_cast<int>(floor(playerPosition.y / m_tileSize));
+                        int col = int((playerPosition.x - 0.5f * m_tileSize) / m_tileSize);
+                        int row = int((playerPosition.y - 0.5f * m_tileSize) / m_tileSize);
+                        sf::Vector2i playerGridPosition = sf::Vector2i {col, row}; 
                         logData.m_playerScreenPosition = playerPosition;
-                        logData.m_playerGridPosition = sf::Vector2i{ col, row };
+                        logData.m_playerGridPosition = playerGridPosition;
                         logData.m_playerMomentum = pPlayer->getMomentum();
                         logData.m_playerBuffer = pPlayer->getBuffer();
 
+                        
+                        //keeps track of the sorrounding directions while the player moves inside a tile
+                        static std::vector<bool> cachedDirections(4, false); 
+                        static bool firstRun = true; 
+
+                        //check the sorrounding tiles if grid positions have changed
+                        if (gridPosStamp != playerGridPosition) {
+                            gridPosStamp = playerGridPosition; 
+                            cachedDirections = validDirections(playerGridPosition);
+                            firstRun = false;
+                        }
+                        
+                        std::vector<sf::Vector2i> dirs = {{0, -1}, {0,1}, {-1, 0}, {1, 0 }};
+                        std::vector<float> wallDistances; 
+
+                        for (size_t i = 0; i < dirs.size(); ++i) {
+                            wallDistances.push_back(getDistanceToWall(playerGridPosition, dirs[i]));
+                        }
+
+                        logData.m_wallDistances = wallDistances;
+
+                        //add the direction information to pLogData
+                        logData.m_validDirections = cachedDirections; 
                     }
                     m_pEntities[i]->move(getTileSize(), getGrid(), m_crossings);
 
@@ -469,6 +564,7 @@ void Game::run() {
 
                 //REWARD FUNCTION: decreases reward for time passing
                 m_reward -= 0.001f;
+                accumulatedReward += m_reward; 
 
                 //base log interval every 10 frames 
                 //log if buffer has changed 
@@ -476,17 +572,26 @@ void Game::run() {
                     m_pEventLogger->gatherLogData(logData);
                 }
 
-                //controls model forwarding frequency
-                if (true) {
+                //forward data to the ml model in intervals specified by ML_ACTION_INTERVAL
+                if (m_frameCount % ML_ACTION_INTERVAL == 0) {
 
                     //logs the current reward score
-                    logData.m_reward = m_reward;
+                    logData.m_reward = accumulatedReward;
 
                     //log the truncated flag
                     logData.m_truncated = m_truncated;
 
                     //log the terminated flag
                     logData.m_done = m_terminated;
+
+                    //log the active pellet positions
+                    for (size_t i = 0; i < m_pPellets.size(); ++i) {
+                        if (!m_pPellets[i]->getPickedUpState()) {
+                            logData.m_pelletPositions.push_back(
+                                m_pPellets[i]->getSprite().getPosition()
+                            );
+                        }
+                    }
 
                     sf::Vector2f predictedBuffer = m_pEventLogger->forwardLogData(logData);
 
@@ -495,13 +600,13 @@ void Game::run() {
                         m_gameInitialized = false;
                         m_score = 0;
                         m_gameRunning = true;
+                        accumulatedReward = 0.0f;
                         //leaves the inner game-loop to trigger reset
                         break;
                     }
 
-                    //DEBUGGING ONLY
-
                     pPlayer->recieveInput(predictedBuffer);
+                    accumulatedReward = 0.0f; 
                 }
     
                 render();
@@ -570,3 +675,14 @@ Game::~Game() {
     //clears the texture cache only at the end of the program
     m_textureCache.clear();
 }
+
+
+
+
+
+
+
+
+
+
+

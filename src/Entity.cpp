@@ -2,6 +2,7 @@
 // Created by Viktor Brandmaier on 03.07.25.
 //
 #include "Entity.h"
+#include <SFML/System/Vector2.hpp>
 #include <iostream>
 #include <SFML/Graphics/Sprite.hpp>
 #include "Game.h"
@@ -14,8 +15,11 @@ Entity::Entity(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
 //in SMFL3 sprite needs to be initialized in the initializer list
     m_texture(_texture),
     m_sprite(m_texture)
- {
-    m_sprite.setScale({0.05f, 0.05f});
+{
+    sf::Vector2u textureSize = m_texture.getSize();
+    m_sprite.setOrigin({textureSize.x * 0.5f, textureSize.y * 0.5f});
+    
+    m_sprite.setScale({0.15f, 0.15f});
     m_sprite.setPosition({_spawnPosition});
 }
 

@@ -3,7 +3,7 @@
 // Modified for Unix/Linux compatibility
 //
 
-#include "EventLogger.h"
+#include "EventLogger_unix.h"
 #include "tool.h"
 #include <cstddef>
 #include <fstream>
