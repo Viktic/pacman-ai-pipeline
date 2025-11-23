@@ -18,6 +18,6 @@ The project implements a hybrid C++/Python architecture to benefit from a high p
 
 * **Game Environment (C++):** Built from scratch using **SFML** for rendering and physics. Handles the game loop,state management and custom reward function.
 * **IPC Bridge:** OS-specific `EventLogger` implementations handling inter-process communitcation via **IO Pipes** (Windows Pipes / Unix Fork & Exec) to stream game state data.
-* **ML Worker (Python):** Consumes JSON game snapshots via `stdin`, separating the AI logic from the game engine.
+* **ML Worker (Python):** Consumes JSON game snapshots via `stdin`, separating the AI logic from the game-engine.
 * **Feature Engineering:** `feature_engineer.py` extracts custom features from the raw game states (e.g., relative enemy positions, wall distances).
 * **RL Agent:** `rl_agent.py` implements a **Deep Q-Learning (DQN)** agent with Experience Replay and Target Network for stable training.
