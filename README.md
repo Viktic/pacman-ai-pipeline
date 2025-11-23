@@ -76,11 +76,14 @@ cmake --build .
 execute the generated binary
 
 ##### On windows
+##### On Windows
 ```bash
-.\Debug\main.exe
+cd bin\Debug
+.\main.exe
 ```
 ##### On Unix/MacOS
 ```bash
+cd bin
 ./main
 ```
 
