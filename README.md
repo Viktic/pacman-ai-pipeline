@@ -42,11 +42,11 @@ cd pacman-ai-pipeline
 ### Create and activate virtual environment
 python -m venv venv
 
-#### On Windows:
+##### On Windows:
 ```bash
 venv\Scripts\activate
 ```
-#### On Unix/MacOS:
+##### On Unix/MacOS:
 ```bash
 source venv/bin/activate
 ```
