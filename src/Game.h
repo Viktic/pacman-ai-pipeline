@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "tool.h"
-#include "EventLogger.h"
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 #include <memory>
@@ -15,6 +14,7 @@ class Pellet;
 class Entity;
 class Player;
 class Enemy;
+class EventLogger;
 
 class Game {
 

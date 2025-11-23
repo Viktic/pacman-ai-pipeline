@@ -2,13 +2,18 @@
 // Created by Viktor Brandmaier on 02.08.25.
 //
 
+#ifdef _WIN32
+    #include "EventLogger_win.h"
+#else
+    #include "EventLogger_unix.h"
+#endif
+
 #include "Game.h"
 #include "Entity.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "Pellet.h"
 #include "LogData.h"
-#include "EventLogger.h"
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <iostream>
