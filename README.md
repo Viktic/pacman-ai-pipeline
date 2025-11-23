@@ -40,7 +40,9 @@ git clone [https://github.com/viktic/pacman-ai-pipeline.git](https://github.com/
 cd pacman-ai-pipeline
 ```
 ### Create and activate virtual environment
+```bash
 python -m venv venv
+```
 
 ##### On Windows:
 ```bash
