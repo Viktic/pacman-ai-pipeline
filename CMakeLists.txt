@@ -29,7 +29,7 @@ FETCHCONTENT_DECLARE(nlohmann_json
 )
 FETCHCONTENT_MAKEAVAILABLE(nlohmann_json)
 
-
+#add os independent files to target list
 add_executable(main
     src/main.cpp
     src/Entity.cpp
@@ -43,8 +43,18 @@ add_executable(main
     src/tool.h
     src/Pellet.cpp
     src/Pellet.h 
-    src/EventLogger.h 
-    src/EventLogger.cpp "src/tool.cpp")
+    src/tool.cpp)
+
+#add os specific files to target list
+if (WIN32)
+    target_sources(main PRIVATE 
+    src/EventLogger_win.h
+    src/EventLogger_win.cpp)
+else ()
+    target_sources(main PRIVATE 
+    src/EventLogger_unix.cpp
+    src/EventLogger_unix.cpp)
+endif()
 
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
