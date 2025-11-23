@@ -21,3 +21,65 @@ The project implements a hybrid C++/Python architecture to benefit from a high p
 * **ML Worker (Python):** Consumes JSON game snapshots via `stdin`, separating the AI logic from the game-engine.
 * **Feature Engineering:** `feature_engineer.py` extracts custom features from the raw game states (e.g., relative enemy positions, wall distances).
 * **RL Agent:** `rl_agent.py` implements a **Deep Q-Learning (DQN)** agent with Experience Replay and Target Network for stable training.
+
+## Requirements
+
+* **C++ Compiler:** C++17 compatible (GCC, Clang, MSVC)
+* **Build System:** CMake (3.28+)
+* **Python:** 3.x
+* **Libraries:** * SFML 3.0.1 (fetched automatically via CMake)
+  * PyTorch, Pandas, NumPy (install via pip)
+
+## Build & Installation
+
+### 1. Clone the Repository
+Start by cloning the repository to your local machine:
+
+```bash
+git clone [https://github.com/viktic/pacman-ai-pipeline.git](https://github.com/viktic/pacman-ai-pipeline.git)
+cd pacman-ai-pipeline
+```
+# Create and activate virtual environment
+python -m venv venv
+
+# On Windows:
+```bash
+venv\Scripts\activate
+```
+# On Unix/MacOS:
+```bash
+source venv/bin/activate
+```
+
+# Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+# Configure paths
+run the configuration script to generate absolute paths
+```bash
+python scripts/path_configurator.py
+```
+
+# Build the C++ Engine
+use CMake to configure and build the project. SFML and other C++ dependencies will be fetched automatically
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+```
+
+# Run the training
+execute the generated binary
+
+# On windows
+```bash
+.\Debug\main.exe
+```
+# On Unix/MacOS
+```bash
+./main
+```
+
+
