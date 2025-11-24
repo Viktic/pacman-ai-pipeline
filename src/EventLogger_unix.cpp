@@ -386,7 +386,7 @@ EventLogger::~EventLogger() {
         kill(m_pythonPid, SIGTERM);
 
         int status;
-        //checks if the child process complied immediatly (WNOHANG)
+        //checks if the child process complied immediately (WNOHANG)
         pid_t result = waitpid(m_pythonPid, &status, WNOHANG);
         if (result == 0) {
             //kills the child process if it did not comply
