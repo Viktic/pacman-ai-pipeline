@@ -55,7 +55,7 @@ EventLogger::EventLogger() :
         return;
     }
 
-    //forks process to create childprocess from which the python process will be started
+    //forks process to create child process from which the python process will be started
     m_pythonPid = fork();
 
     //close pipe ends if fork() fails, to avoid ressource leak
