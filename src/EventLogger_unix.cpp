@@ -70,19 +70,19 @@ EventLogger::EventLogger() :
 
     //child process (python process)
     if (m_pythonPid == 0) {
-        //trys to redirect standard input of python process to stdinPipe[0]
+        //tries to redirect standard input of python process to stdinPipe[0]
         //dup2() increases reference counter to pipe object
         if (dup2(stdinPipe[0], STDIN_FILENO) == -1) {
             perror("dup2 stdin");
             exit(1);
         }
-        //trys to redirect standard output of python process to stdoutPipe[1]
+        //tries to redirect standard output of python process to stdoutPipe[1]
         //dup2() increases reference counter to pipe object
         if (dup2(stdoutPipe[1], STDOUT_FILENO) == -1) {
             perror("dup2 stdout");
             exit(1);
         }
-        //trys to redirect standard error of python process to stdoutPipe[1]
+        //tries to redirect standard error of python process to stdoutPipe[1]
         //dup2() increases reference counter to pipe object
         if (dup2(stdoutPipe[1], STDERR_FILENO) == -1) {
             perror("dup2 stderr");
