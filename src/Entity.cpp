@@ -3,13 +3,12 @@
 //
 #include "Entity.h"
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
 #include <SFML/Graphics/Sprite.hpp>
 #include "Game.h"
 #include <SFML/Graphics/Texture.hpp>
 
 
-//entitiy constructor
+//Entitiy constructor
 Entity::Entity(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
 
 //in SMFL3 sprite needs to be initialized in the initializer list

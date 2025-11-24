@@ -26,8 +26,6 @@ class Player: public Entity {
         sf::Vector2f& getBuffer(); 
         void recieveInput(sf::Vector2f _buffer);
 
-
-
     private:
 
         //Momentum Variable to keep track of the players movement direction
@@ -35,9 +33,7 @@ class Player: public Entity {
 
         //Momentum buffer Variable to keep track of the next direction
         sf::Vector2f m_buffer;
-
         float m_speed;
-
 };
 
 

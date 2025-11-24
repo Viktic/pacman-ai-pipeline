@@ -26,6 +26,7 @@ EventLogger::EventLogger() :
     m_pythonPid(-1),
     m_pythonProcessRunning(false)
 {
+    //ignore SIGPIPE signal
     signal(SIGPIPE, SIG_IGN);
 
     std::fstream file("config/paths.json");
@@ -44,16 +45,20 @@ EventLogger::EventLogger() :
     std::string ml_workerPath = j["ml_workerPath"];
     std::string pythonPath = j["pythonPath"];
 
+    //arrays to store read and write ends 
     int stdinPipe[2];
     int stdoutPipe[2];
 
+    //try to create pipes 
     if (pipe(stdinPipe) == -1 || pipe(stdoutPipe) == -1) {
         std::cerr << "Failed to create pipes!" << std::endl;
         return;
     }
 
+    //forks process to create childprocess from which the python process will be started
     m_pythonPid = fork();
 
+    //close pipe ends if fork() fails, to avoid ressource leak
     if (m_pythonPid == -1) {
         std::cerr << "Failed to fork process!" << std::endl;
         close(stdinPipe[0]);
@@ -63,26 +68,34 @@ EventLogger::EventLogger() :
         return;
     }
 
+    //child process (python process)
     if (m_pythonPid == 0) {
+        //trys to redirect standard input of python process to stdinPipe[0]
+        //dup2() increases reference counter to pipe object
         if (dup2(stdinPipe[0], STDIN_FILENO) == -1) {
             perror("dup2 stdin");
             exit(1);
         }
-
+        //trys to redirect standard output of python process to stdoutPipe[1]
+        //dup2() increases reference counter to pipe object
         if (dup2(stdoutPipe[1], STDOUT_FILENO) == -1) {
             perror("dup2 stdout");
             exit(1);
         }
-
+        //trys to redirect standard error of python process to stdoutPipe[1]
+        //dup2() increases reference counter to pipe object
         if (dup2(stdoutPipe[1], STDERR_FILENO) == -1) {
             perror("dup2 stderr");
             exit(1);
         }
 
+        //close pipe ends that now have aliases to decrease reference counter
         close(stdinPipe[0]);
+        close(stdoutPipe[1]);
+        
+        //close pipe ends that are only used for communication by parent process
         close(stdinPipe[1]);
         close(stdoutPipe[0]);
-        close(stdoutPipe[1]);
 
         const char *arg1 = "-u";
 
@@ -90,17 +103,24 @@ EventLogger::EventLogger() :
             (char*)pythonPath.c_str(),
             (char*)arg1,
             (char*)ml_workerPath.c_str(),
+            //signals the end of args string
             nullptr
         };
 
+        //starts python process
         execv(pythonPath.c_str(), args);
 
+        //this code can only be reached if execv fails
         perror("execv");
         exit(1);
+
     } else {
+
+        //close pipe ends that are only used by python process
         close(stdinPipe[0]);
         close(stdoutPipe[1]);
 
+        //save pipe ends for parent process communication
         m_stdinWrite = stdinPipe[1];
         m_stdoutRead = stdoutPipe[0];
 
@@ -108,8 +128,8 @@ EventLogger::EventLogger() :
     }
 }
 
+//retrieves the current session id from the manifest to calculate the new session id
 int EventLogger::getSessionId() {
-
     if (!std::filesystem::exists(m_rawDataManifest)) {
         std::ofstream manifest(m_rawDataManifest);
         if (!manifest.is_open()) {
@@ -161,8 +181,8 @@ int EventLogger::getSessionId() {
     return newSessionId;
 }
 
+//initializes a new session for event logging
 void EventLogger::initializeSession() {
-
     m_session.clear();
     if (m_sessionStream.is_open()) {
         m_sessionStream.close();
@@ -193,8 +213,8 @@ void EventLogger::initializeSession() {
     manifest.close();
 }
 
+//turn logData into JSON snapshot
 void EventLogger::gatherLogData(LogData& _data) {
-
     nlohmann::json tick = {
         {"tick", _data.m_tick},
         {"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
@@ -229,14 +249,17 @@ void EventLogger::gatherLogData(LogData& _data) {
     m_session["ticks"].push_back(tick);
 }
 
+//writes the logData into the session stream
 void EventLogger::writeLogData() {
     m_sessionStream << m_session.dump(4);
 }
 
+//closes the session stream
 void EventLogger::closeSession() {
     m_sessionStream.close();
 }
 
+//checks if session stream is opened
 bool EventLogger::isSessionOpen() {
     if (m_sessionStream.is_open()) {
         return true;
@@ -244,8 +267,8 @@ bool EventLogger::isSessionOpen() {
     return false;
 }
 
+//creates JSON snapshot and sends it to the python process
 sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
-
     nlohmann::json snapshot = {
         {"tick", _data.m_tick},
         {"player_position_screen", {_data.m_playerScreenPosition.x, _data.m_playerScreenPosition.y}},
@@ -302,6 +325,7 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
     std::string response;
     char ch;
 
+    //instructs poll system to only monitor input events for read end in parent process
     struct pollfd pfd;
     pfd.fd = m_stdoutRead;
     pfd.events = POLLIN;
@@ -309,6 +333,7 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
     const int TIMEOUT_MS = 10000;
 
     while (true) {
+        //waits for poll event with 10s timeout window
         int pollResult = poll(&pfd, 1, TIMEOUT_MS);
 
         if (pollResult == -1) {
@@ -319,7 +344,7 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
             break;
         }
 
-        ssize_t bytesRead = read(m_stdoutRead, &ch, 1);
+        size_t bytesRead = read(m_stdoutRead, &ch, 1);
 
         if (bytesRead <= 0) {
             break;
@@ -348,6 +373,7 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 EventLogger::~EventLogger() {
     closeSession();
 
+    //closes open pipe ends
     if (m_stdinWrite != -1) {
         close(m_stdinWrite);
     }
@@ -356,13 +382,17 @@ EventLogger::~EventLogger() {
     }
 
     if (m_pythonProcessRunning && m_pythonPid > 0) {
+        //instructs the childprocess to end its work
         kill(m_pythonPid, SIGTERM);
 
         int status;
+        //checks if the child process complied immediatly (WNOHANG)
         pid_t result = waitpid(m_pythonPid, &status, WNOHANG);
         if (result == 0) {
+            //kills the child process if it did not comply
             sleep(1);
             kill(m_pythonPid, SIGKILL);
+            //waits for exit code to avoid zombie process
             waitpid(m_pythonPid, &status, 0);
         }
     }

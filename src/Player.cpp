@@ -9,7 +9,6 @@
 #include <SFML/System/Vector2.hpp>
 #include <cmath>
 
-
 Player* Player::instance = nullptr; 
 
 //Player constructor
@@ -36,14 +35,12 @@ sf::Vector2f& Player::getBuffer() {
  
 //handle the buffered-movement logic 
 void Player::move(float _tileSize, const std::vector<std::string>& _grid, const std::unordered_set<sf::Vector2i, tool::sfVector2iHash>& _crossings) {
-
-
     //current player position
     sf::Vector2f pos = getSprite().getPosition();
 
-    //current player grid position
+    //current player grid position (no snapping to tile center required)
     int col = static_cast<int>(floor(pos.x / _tileSize));
-    int row = static_cast<int>(floor(pos.y / _tileSize));
+    int row = static_cast<int>(floor(pos.y / _tileSize));    
 
     //tile-center position
     float centerX = col * _tileSize + 0.5f * _tileSize;
@@ -139,7 +136,6 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
 
     //check if current tile is a corridor and close proximity to center
     else if (distanceToCenter <= epsilon || crossingCenter) {
-        
         //keep track of direction change (only need to snap to center once)
         bool directionChanged = false;
 
@@ -148,7 +144,6 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
         bool downBlocked = (row >= static_cast<int>(_grid.size() - 1)) || (_grid[row + 1][col] == '#');
         bool leftBlocked = (col <= 0) || (_grid[row][col - 1] == '#');
         bool rightBlocked = (col >= static_cast<int>(_grid[row].size() - 1)) || (_grid[row][col + 1] == '#');
-
 
         //set starting impulse if not moving yet
         if (m_momentum.x == 0.0f && m_momentum.y == 0.0f &&
@@ -241,13 +236,10 @@ void Player::move(float _tileSize, const std::vector<std::string>& _grid, const 
         //right
         getSprite().setRotation(sf::degrees(0.0f));
     }
-
-
 }
 
 //player input handler 
 void Player::handleInput(sf::Keyboard::Key _key) {
-
     //update buffer with corresponding direction-vectors if a movement key is pressed
     if (_key == sf::Keyboard::Key::W) m_buffer = {0.0f, -1.0f};
     if (_key == sf::Keyboard::Key::S) m_buffer = {0.0f, 1.0f};
@@ -257,6 +249,5 @@ void Player::handleInput(sf::Keyboard::Key _key) {
 
 //player input reciever (if ml-model dictates input) 
 void Player::recieveInput(sf::Vector2f _buffer) {
-
     m_buffer = _buffer; 
 }

@@ -3,7 +3,6 @@
 //
 
 #include "Enemy.h"
-#include <iostream>
 
 //static randomization device initialization
 std::mt19937 Enemy::m_rng(std::random_device{}());
@@ -24,8 +23,8 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
     sf::Vector2f pos = getSprite().getPosition();
 
     //get the grid coordinates
-    int col = int((pos.x - 0.5f * _tileSize) / _tileSize);
-    int row = int((pos.y - 0.5f * _tileSize) / _tileSize);
+    int col = static_cast<int>((pos.x - 0.5f * _tileSize) / _tileSize);
+    int row = static_cast<int>((pos.y - 0.5f * _tileSize) / _tileSize);
 
     //directions vector to keep track of possible movement directions
     std::vector<sf::Vector2f> directions;
@@ -95,7 +94,6 @@ void Enemy::move(float _tileSize, const std::vector<std::string>& _grid, const s
     };
 
     getSprite().setPosition(newPos);
-
 }
 
 
