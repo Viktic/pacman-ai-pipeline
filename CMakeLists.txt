@@ -52,7 +52,7 @@ if (WIN32)
     src/EventLogger_win.cpp)
 else ()
     target_sources(main PRIVATE 
-    src/EventLogger_unix.cpp
+    src/EventLogger_unix.h
     src/EventLogger_unix.cpp)
 endif()
 
