@@ -27,8 +27,8 @@ The project implements a hybrid C++/Python architecture to benefit from a high p
 * **C++ Compiler:** C++17 compatible (GCC, Clang, MSVC)
 * **Build System:** CMake (3.28+)
 * **Python:** 3.x
-* **Libraries:** * SFML 3.0.1 (fetched automatically via CMake)
-  * PyTorch, Pandas, NumPy (install via pip)
+* **Libraries:** SFML 3.0.1 (fetched automatically via CMake)
+* **PyTorch, Pandas, NumPy (install via pip)
 
 ## Build & Installation
 
