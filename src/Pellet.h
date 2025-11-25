@@ -2,10 +2,10 @@
 // Created by Viktor Brandmaier on 26.08.2025
 //
 
-#include <string>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #pragma once
+
 
 class Pellet {
 
@@ -16,7 +16,6 @@ public:
 	const sf::Sprite& getSprite(); 
 	bool getPickedUpState();
 	void setPickedUpState(bool _state); 
-
 
 private:
 

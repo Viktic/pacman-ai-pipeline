@@ -8,8 +8,9 @@
 #include <unordered_map>
 #include <string>
 
-namespace tool {
 
+namespace tool {
+    
     //defines hash for std::Vector2i
     struct sfVector2iHash {
         size_t operator() (const sf::Vector2i _vector) const noexcept {
