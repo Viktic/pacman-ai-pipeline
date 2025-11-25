@@ -5,6 +5,7 @@
 #include "Pellet.h"
 #include "Game.h"
 
+
 // Pellet constructor - takes texture reference instead of loading it
 Pellet::Pellet(const sf::Texture& _texture, sf::Vector2f& _spawnPosition):
 	m_texture(_texture),

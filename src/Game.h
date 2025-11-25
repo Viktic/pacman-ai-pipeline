@@ -1,6 +1,7 @@
 //
 // Created by Viktor Brandmaier on 02.08.25.
 //
+
 #pragma once
 #include "tool.h"
 #include <SFML/System/Vector2.hpp>
@@ -38,7 +39,6 @@ public:
     void clearGame(); 
     const std::vector<std::string>& getGrid() const;
     sf::RenderWindow& getWindow();
-
 
 private:
 

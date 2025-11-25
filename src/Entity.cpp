@@ -1,6 +1,7 @@
 //
 // Created by Viktor Brandmaier on 03.07.25.
 //
+
 #include "Entity.h"
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Sprite.hpp>
