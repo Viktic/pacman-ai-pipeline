@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstdio>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <windows.h>
 
 
@@ -29,8 +30,6 @@ EventLogger::EventLogger() :
 		std::cerr << "failed to open file: config/paths.json" << std::endl;
 	}
 
-
-
 	//read the config file contents
 	nlohmann::json j;
 	file >> j;
@@ -48,13 +47,13 @@ EventLogger::EventLogger() :
 	//set the python executable path
 	std::string pythonPath = j["pythonPath"];
 
-
-	//start the python process
+	//handles that will be inherited by python process
 	HANDLE hStdinRead;
 	HANDLE hStdoutWrite;
 
 	SECURITY_ATTRIBUTES sa{};
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	//handles must be inheritable
 	sa.bInheritHandle = TRUE;
 	sa.lpSecurityDescriptor = nullptr;
 
@@ -65,16 +64,18 @@ EventLogger::EventLogger() :
 
 	STARTUPINFOA si{};
 	si.cb = sizeof(STARTUPINFO);
+	//instructs the python process to use specific handles
 	si.dwFlags = STARTF_USESTDHANDLES;
+	//python process inherits handles
 	si.hStdInput = hStdinRead;
 	si.hStdOutput = hStdoutWrite;
 	si.hStdError = hStdoutWrite;
 
+	//starts pytthon process
 	std::string cmd = pythonPath + " -u " + ml_workerPath;
 	if (!CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &m_pi)) {
 		std::cerr << "Failed to start Python process! cmd path: " << cmd << std::endl;
 	} 	
-
 
 	//closes unused pipe ends
 	CloseHandle(hStdinRead);
@@ -82,12 +83,10 @@ EventLogger::EventLogger() :
 
 	//set the python-process-running flag to true
 	m_pythonProcessRunning = true;
-
 }
 
 //retrieves the latest sessions id from the manifest and increments it to get the current session_id
 int EventLogger::getSessionId() {
-
 	//initialize manifest.jsonl if manifest does not exist yet
 	if (!std::filesystem::exists(m_rawDataManifest)) {
 		//create the manifest
@@ -155,7 +154,6 @@ int EventLogger::getSessionId() {
 //initializes a new session json file in the raw/sessions directory
 void EventLogger::initializeSession() {
 
-
 	m_session.clear(); 
 	//check if the sessionStream is still open
 	if (m_sessionStream.is_open()) {
@@ -165,10 +163,8 @@ void EventLogger::initializeSession() {
 	int sessionId = getSessionId(); 
 	std::string sessionIdString = std::to_string(sessionId);
 	std::string sessionString = "sessions/session_" + sessionIdString + ".json";
-
 	m_sessionPath = m_rawDataDir + "/" + sessionString;
 	
-
 	//create the session
 	m_sessionStream.open(m_sessionPath, std::ios::out);
 	if (!m_sessionStream.is_open()) {
@@ -179,13 +175,11 @@ void EventLogger::initializeSession() {
 	//intialize session json object;
 	m_session["ticks"] = nlohmann::json::array(); 
 
-
 	//open manifest in append mode
 	std::ofstream manifest(m_rawDataManifest, std::ofstream::app);
 	if (!manifest.is_open()) {
 		std::cerr << "failed to open manifest" << std::endl; 
 	}
-	
 
 	//write the new session information into the manifest
 	std::string jsonObject = "\n{\"session_id\":" + sessionIdString + ", \"file_path\":\"" + sessionString + "\" }";
@@ -217,10 +211,8 @@ void EventLogger::gatherLogData(LogData& _data) {
 		tick["enemy_momenta"].push_back({ _data.m_enemyMomenta[i].x, _data.m_enemyMomenta[i].y });
 	}
 
-
 	//write the current tick data into the session object
 	m_session["ticks"].push_back(tick);
-
 }
 
 void EventLogger::writeLogData() {
@@ -229,6 +221,28 @@ void EventLogger::writeLogData() {
 }
 
 void EventLogger::closeSession() {
+	if (!m_pythonProcessRunning) {
+		return;
+	}
+
+	//send shutdown command to python process
+	std::string shutdown_cmd = "SHUTDOWN\n";
+	DWORD written; 
+	WriteFile(m_hStdinWrite, shutdown_cmd.c_str(), (DWORD)shutdown_cmd.size(), &written, nullptr )
+	FlushFileBuffers(m_hStdinWrite)
+	
+	CloseHandle(m_hStdinWrite);
+	m_hStdinWrite = nullptr; 
+
+	DWORD wait_result = WaitForSingleObject(m_pi.hProcess, 1000);
+	if (wait_result == WAIT_TIMEOUT) {
+		TerminateProcess(m_pi.hProcess);
+	}
+
+	CloseHandle(m_pi.hThread);
+	m_pi.hProcess = nullptr; 
+	m_pythonProcessRunning = false; 
+
 	m_sessionStream.close();
 }
 
@@ -270,10 +284,11 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 	DWORD written;
 	WriteFile(m_hStdinWrite, jsonLine.c_str(), (DWORD)jsonLine.size(), &written, nullptr);
 	FlushFileBuffers(m_hStdinWrite);
-	//reads the json-line
+	
 	std::string response;
 	char ch;
 	DWORD read;
+	//reads the json line bytewise to make sure newline delimiter is not skipped
 	while (true) {
 		if (!ReadFile(m_hStdoutRead, &ch, 1, &read, nullptr) || read == 0) {
 			std::cerr << "ReadFile failed or EOF" << std::endl;
@@ -284,11 +299,8 @@ sf::Vector2f EventLogger::forwardLogData(LogData& _data) {
 		response.push_back(ch);
 	}
 
-
 	//convert the predicted direction into a valid direction vector
 	sf::Vector2f hashedDirection = tool::translationMap[response];
-
-	
 
 	return hashedDirection;
 }
@@ -297,7 +309,6 @@ EventLogger::~EventLogger() {
 	closeSession();
 	
 	//process pipe cleanup
-	CloseHandle(m_hStdinWrite);
 	CloseHandle(m_hStdoutRead);
 	CloseHandle(m_pi.hThread);
 }

@@ -7,7 +7,6 @@
 #include <string>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include <cstdio>
 #include <windows.h>
 
 class EventLogger {
@@ -36,6 +35,5 @@ private:
 	std::string m_rawDataDir; 
 	std::string m_rawDataManifest; 
 	std::string m_sessionPath; 
-
 };
 
