@@ -9,11 +9,15 @@ rawDataDirManifest = os.path.normpath(os.path.join(dirPath, "../../data/raw/mani
 ml_workerPath = os.path.normpath(os.path.join(dirPath, "../model/ml_worker.py"))
 pythonPath = os.path.normpath(sys.executable)
 
+try:
+        with open(jsonConfigPaths, "w") as f: 
+                data = {"rawDataDir": rawDataDir, 
+                        "rawDataDirManifest": rawDataDirManifest,
+                        "ml_workerPath": ml_workerPath,
+                        "pythonPath": pythonPath}
+                json.dump(data, f)
+        print("path configuration successful")
+except Exception as e: 
+        print(f"path configuration failed: {e}")
 
-with open(jsonConfigPaths, "w") as f: 
-    data = {"rawDataDir": rawDataDir, 
-            "rawDataDirManifest": rawDataDirManifest,
-            "ml_workerPath": ml_workerPath,
-            "pythonPath": pythonPath}
-    json.dump(data, f)
-    
+
