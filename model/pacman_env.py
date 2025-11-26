@@ -4,6 +4,7 @@ import numpy as np
 import json
 import rl_agent
 import logging
+import sys
 from collections import deque
 
 
@@ -45,6 +46,11 @@ class PacmanEnv():
         
         #cleans the input line
         line = line.strip()
+
+        #read the windows shutdown signal to end the process
+        if line == "SHUTDOWN":
+            sys.exit(0)
+
         if not line:
             return False, False
 
