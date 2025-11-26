@@ -1,4 +1,4 @@
-F## Pacman Reinforcement Learning Pipeline
+## Pacman Reinforcement Learning Pipeline
 
 Reinforcement Learning Pipeline to train a Python based agent to learn how to play a PacMan style game built in a C++ environment.
 
