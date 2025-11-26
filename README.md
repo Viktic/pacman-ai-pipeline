@@ -63,7 +63,7 @@ run the configuration script to generate absolute paths
 ```bash
 python scripts/path_configurator.py
 ```
-> **_NOTE:_**  If you manually change the contents of the config/paths.json in the project root after you already built the project, you have to run a clean rebuild to ensure that it gets copied into the runtime directory correctly
+> **_NOTE:_**  If you change the contents of the config/paths.json in the project root after you already built the project, you have to run a clean rebuild to ensure that it gets copied into the runtime directory correctly
 
 ### 5. Build the C++ Engine
 use CMake to configure and build the project. SFML and other C++ dependencies will be fetched automatically
